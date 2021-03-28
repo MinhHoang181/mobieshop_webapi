@@ -1,0 +1,1702 @@
+{
+	"info": {
+		"_postman_id": "ffe40769-0e56-46c7-bac0-aa2046366820",
+		"name": "MobileShop",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Customer",
+			"item": [
+				{
+					"name": "Profile Customer",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{access_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}profile",
+							"host": [
+								"{{api_url}}profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Profile Customer",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"value": "{{access_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"customer_address\": \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}profile/edit",
+							"host": [
+								"{{api_url}}profile"
+							],
+							"path": [
+								"edit"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.environment.get(\"api_url\") + \"login\",",
+							"  method: \"POST\",",
+							"  header: {",
+							"      \"Content-Type\" : \"application/json\"",
+							"  },",
+							"  body: {",
+							"    mode: 'raw',",
+							"    raw: JSON.stringify({",
+							"        customer_name : pm.environment.get(\"customer_name\"),",
+							"        customer_password : pm.environment.get(\"customer_password\")",
+							"    })",
+							"  }",
+							"};",
+							"",
+							"pm.sendRequest(postRequest, (error, response) => {",
+							"    if (response) {",
+							"        pm.environment.set(\"access_token\", response.json().access_token);",
+							"    } else if (error) {",
+							"        console.log(error);",
+							"    }",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Role",
+					"item": [
+						{
+							"name": "Permission",
+							"item": [
+								{
+									"name": "Get Permission Role Of Current Admin",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{api_url}}admin/role/permission",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission"
+											],
+											"query": [
+												{
+													"key": "",
+													"value": "",
+													"disabled": true
+												}
+											]
+										},
+										"description": "Xem tất cả quyền của một chức vụ thông qua id/name chức vụ hoặc của admin gửi request"
+									},
+									"response": []
+								},
+								{
+									"name": "Get Permission Role By Id",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{api_url}}admin/role/permission?role_id=1",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission"
+											],
+											"query": [
+												{
+													"key": "role_id",
+													"value": "1"
+												}
+											]
+										},
+										"description": "Xem tất cả quyền của một chức vụ thông qua id/name chức vụ hoặc của admin gửi request"
+									},
+									"response": []
+								},
+								{
+									"name": "Get Permission Role By Name",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{api_url}}admin/role/permission?role_name=sales",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission"
+											],
+											"query": [
+												{
+													"key": "role_name",
+													"value": "sales"
+												}
+											]
+										},
+										"description": "Xem tất cả quyền của một chức vụ thông qua id/name chức vụ hoặc của admin gửi request"
+									},
+									"response": []
+								},
+								{
+									"name": "Get Permission List",
+									"request": {
+										"method": "GET",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{api_url}}admin/role/permission/list",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission",
+												"list"
+											],
+											"query": [
+												{
+													"key": "role_id",
+													"value": "1",
+													"disabled": true
+												}
+											]
+										},
+										"description": "Xem tất cả quyền của một chức vụ thông qua id/name chức vụ hoặc của admin gửi request"
+									},
+									"response": []
+								},
+								{
+									"name": "Add Permission For Role",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"role_name\" : \"admin\",\n    \"permission_name\" : \"AccountManager\",\n    \"action_name\" : \"delete\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{api_url}}admin/role/permission/create",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission",
+												"create"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Permission Of Role",
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "x-access-token",
+												"value": "{{access_token}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n    \"role_name\" : \"admin\",\n    \"permission_name\" : \"RoleManager\",\n    \"action_name\" : \"delete\"\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{api_url}}admin/role/permission/delete",
+											"host": [
+												"{{api_url}}admin"
+											],
+											"path": [
+												"role",
+												"permission",
+												"delete"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Get All Role",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{api_url}}admin/role/all",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role",
+										"all"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Role By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/role?role_id=1",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role"
+									],
+									"query": [
+										{
+											"key": "role_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Role By Name",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/role?role_name=admin",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role"
+									],
+									"query": [
+										{
+											"key": "role_name",
+											"value": "admin"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Role Of Current Admin",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/role",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Role",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"role_name\" : \"mod\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/role/create",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Role",
+							"protocolProfileBehavior": {
+								"strictSSL": true
+							},
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"role_id\" : 1,\n    \"role_name\" : \"admin\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/role/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role",
+										"edit"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Role",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"role_id\" : 4\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/role/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"role",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Quản lý quyền",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Account",
+					"item": [
+						{
+							"name": "Get Customer By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/customer?customer_id=1",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"customer"
+									],
+									"query": [
+										{
+											"key": "customer_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Customer By Name",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/customer?customer_name={{customer_name}}",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"customer"
+									],
+									"query": [
+										{
+											"key": "customer_name",
+											"value": "{{customer_name}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Customer",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/customer/all",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"customer",
+										"all"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Customer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customer_id\" : 1\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/account/customer/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"customer",
+										"edit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Customer",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"customer_id\" : 2\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/account/customer/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"customer",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Admin By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/admin?admin_id=1",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin"
+									],
+									"query": [
+										{
+											"key": "admin_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Admin By Name",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/admin?admin_name=admin",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin"
+									],
+									"query": [
+										{
+											"key": "admin_name",
+											"value": "admin"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Admin",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/account/admin/all",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin",
+										"all"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"admin_name\" : \"admin2\",\n    \"admin_password\" : \"admin\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/account/admin/create",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"admin_id\" : 1,\n    \"admin_name\" : \"admin\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/account/admin/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin",
+										"edit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Admin",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"admin_id\" : 4\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/account/admin/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"account",
+										"admin",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Product",
+					"item": [
+						{
+							"name": "Get Product By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/product?product_id=1",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"product"
+									],
+									"query": [
+										{
+											"key": "product_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Product",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/product/all",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"product",
+										"all"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Product",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product_name\": \"test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/product/create",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"product",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Product",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product_id\": 3,\n    \"product_name\": \"test\",\n    \"product_description\": \"test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/product/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"product",
+										"edit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Product",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"product_id\" : 3\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/product/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"product",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Brand",
+					"item": [
+						{
+							"name": "Create Brand",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"brand_name\": \"test\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/brand/create",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"brand",
+										"create"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Brand",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"brand_id\": 4,\n    \"brand_name\": \"test again\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/brand/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"brand",
+										"edit"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Brand",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"brand_id\": 5\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/brand/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"brand",
+										"delete"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Coupon",
+					"item": [
+						{
+							"name": "Get Coupon By Id",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/coupon?coupon_id=1",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"coupon"
+									],
+									"query": [
+										{
+											"key": "coupon_id",
+											"value": "1"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Coupon",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{api_url}}admin/coupon/all",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"coupon",
+										"all"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Coupon",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"coupon_name\": \"test\",\n    \"coupon_code\": \"TEST\",\n    \"coupon_discount\": 10\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/coupon/create",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"coupon",
+										"create"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Edit Coupon",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"coupon_id\": 4,\n    \"coupon_name\": \"test\",\n    \"coupon_code\": \"TESTAGAIN\",\n    \"coupon_discount\": 10\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/coupon/edit",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"coupon",
+										"edit"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Coupon",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "x-access-token",
+										"value": "{{access_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"coupon_id\": 4\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{api_url}}admin/coupon/delete",
+									"host": [
+										"{{api_url}}admin"
+									],
+									"path": [
+										"coupon",
+										"delete"
+									],
+									"query": [
+										{
+											"key": "",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Profile Admin",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "x-access-token",
+								"type": "text",
+								"value": "{{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{api_url}}admin/profile",
+							"host": [
+								"{{api_url}}admin"
+							],
+							"path": [
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Edit Profile Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-access-token",
+								"type": "text",
+								"value": "{{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"admin_email\" : \"test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api_url}}admin/profile/edit",
+							"host": [
+								"{{api_url}}admin"
+							],
+							"path": [
+								"profile",
+								"edit"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const postRequest = {",
+							"  url: pm.environment.get(\"api_url\") + \"admin/login\",",
+							"  method: \"POST\",",
+							"  header: {",
+							"      \"Content-Type\" : \"application/json\"",
+							"  },",
+							"  body: {",
+							"    mode: 'raw',",
+							"    raw: JSON.stringify({",
+							"        admin_name : pm.environment.get(\"admin_name\"),",
+							"        admin_password : pm.environment.get(\"admin_password\")",
+							"    })",
+							"  }",
+							"};",
+							"",
+							"pm.sendRequest(postRequest, (error, response) => {",
+							"    if (response) {",
+							"        pm.environment.set(\"access_token\", response.json().access_token);",
+							"    } else if (error) {",
+							"        console.log(error);",
+							"    }",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Index API",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}",
+					"host": [
+						"{{api_url}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login Admin",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"admin_name\": \"{{admin_name}}\",\n    \"admin_password\": \"{{admin_password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}/admin/login",
+					"host": [
+						"{{api_url}}"
+					],
+					"path": [
+						"admin",
+						"login"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Register Customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customer_name\" : \"customer\",\n    \"customer_password\" : \"customer\",\n    \"customer_address\" : \"\",\n    \"customer_phone\" : \"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}register",
+					"host": [
+						"{{api_url}}register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login Customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"customer_name\" : \"{{customer_name}}\",\n    \"customer_password\" : \"{{customer_password}}\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{api_url}}login",
+					"host": [
+						"{{api_url}}login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Product By Id",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{api_url}}product?product_id=1",
+					"host": [
+						"{{api_url}}product"
+					],
+					"query": [
+						{
+							"key": "product_id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Product",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{api_url}}product/all",
+					"host": [
+						"{{api_url}}product"
+					],
+					"path": [
+						"all"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Brand By Id",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}brand?brand_id=1",
+					"host": [
+						"{{api_url}}brand"
+					],
+					"query": [
+						{
+							"key": "brand_id",
+							"value": "1"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All Brand",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{api_url}}brand/all",
+					"host": [
+						"{{api_url}}brand"
+					],
+					"path": [
+						"all"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"value": ""
+		}
+	]
+}
