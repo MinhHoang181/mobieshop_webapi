@@ -67,12 +67,28 @@ def get_product_all():
     products = []
 
     if request.method == 'GET':
+        page = request.args.get("page", type=int)
+        low_price = request.args.get("low_price", type=int)
+        high_price = request.args.get("high_price", type=int)
+        brand_id = request.args.get("brand_id")
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM products')
+        if not brand_id:
+            cursor.execute(
+                'SELECT * FROM products WHERE (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL)',
+                (low_price, low_price, high_price, high_price, ))
+            
+        else:
+            cursor.execute(
+                'SELECT * FROM products WHERE brand_id = % s', 
+                (brand_id, ))
         data = cursor.fetchall()
         cursor.close()
         if data:
+            if page:
+                first_index = (page - 1) * Product.NUM_PER_PAGE
+                last_index = first_index + Product.NUM_PER_PAGE - 1
+                data = data[first_index:last_index]
             for row in data:
                 row = Product(row)
                 product = {

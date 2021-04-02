@@ -70,12 +70,28 @@ def get_product_all(current_user):
     products = []
 
     if request.method == 'GET':
+        page = request.args.get("page", type=int)
+        low_price = request.args.get("low_price", type=int)
+        high_price = request.args.get("high_price", type=int)
+        brand_id = request.args.get("brand_id")
+
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM products')
+        if not brand_id:
+            cursor.execute(
+                'SELECT * FROM products WHERE (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL)',
+                (low_price, low_price, high_price, high_price, ))
+            
+        else:
+            cursor.execute(
+                'SELECT * FROM products WHERE brand_id = % s', 
+                (brand_id, ))
         data = cursor.fetchall()
         cursor.close()
         if data:
+            if page:
+                first_index = (page - 1) * Product.NUM_PER_PAGE
+                last_index = first_index + Product.NUM_PER_PAGE - 1
+                data = data[first_index:last_index]
             for row in data:
                 row = Product(row)
                 product = {
@@ -119,7 +135,7 @@ def add_product(current_user):
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else None
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
-        time_warranty = data["time_warranty"] if "time_warranty" in data else None
+        time_warranty = data["time_warranty"] if "time_warranty" in data else 0
         product_last_update_when = datetime.now()
 
         if not product_name:

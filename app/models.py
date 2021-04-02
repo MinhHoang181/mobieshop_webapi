@@ -84,6 +84,8 @@ class Action():
 
 # Sản phẩm
 class Product():
+    NUM_PER_PAGE = 12
+    
     def __init__(self, product):
         self.id = product["product_id"] if product else None
         self.name = product["product_name"] if product else None
