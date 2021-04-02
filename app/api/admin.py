@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
-from ..tools import token_required_admin, verify_password, generate_jwt_admin
-from .. import mysql
+from app.tools import token_required_admin, verify_password, generate_jwt_admin
+from app import mysql
 import MySQLdb.cursors
-from ..models import Admin
+from app.models import Admin
+from datetime import datetime
 
 admin = Blueprint("admin", __name__)
 
@@ -14,7 +15,7 @@ admin = Blueprint("admin", __name__)
 #---------------------------------------------
 @admin.route("/admin/login", methods=["POST"])
 def login():
-    loggedin = False
+    status = False
     user = []
     msg = ""
     access_token = ""
@@ -45,13 +46,35 @@ def login():
                 msg = "Password is not correct"
             # neu dung tai khoan trong DB
             else:
-                loggedin = True
+                status = True
                 user = {
                     "admin_id": account["admin_id"],
                     "admin_name": account["admin_name"],
                 }
                 access_token = generate_jwt_admin(account["admin_name"])
-    return jsonify(loggedin=loggedin, msg=msg, access_token=access_token, user=user)
+    return jsonify(status=status, msg=msg, access_token=access_token, user=user)
+
+# Đăng xuất
+#------------------------------------------
+@admin.route("/admin/logout", methods=["GET"])
+@token_required_admin
+def logout(current_user):
+    status = False
+    msg = ""
+    if request.method == "GET":
+        admin_id = current_user["admin_id"]
+        token = request.headers["x-access-token"] 
+        created = datetime.now()
+
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'INSERT INTO blacklist_token_admin VALUES (% s, % s, % s)', (admin_id, token, created))
+        mysql.connection.commit()
+        cursor.close()
+
+        status = True
+        msg = "You have logout!"
+    return jsonify(status=status, msg=msg)
 
 # Lấy thông tin tài khoản admim
 #----------------------------------------------
@@ -65,7 +88,6 @@ def profile(current_user):
         user = {
             "admin_id" : current_user.id,
             "admin_name" : current_user.name,
-            "admin_email" : current_user.email,
             "admin_role" : current_user.role
         }
         status = True
@@ -85,16 +107,11 @@ def edit_profile_admin(current_user):
 
         data = request.json if request.json else []
 
-        admin_email = data["admin_email"] if "admin_email" in data else None
-
-        if not admin_email:
-            admin_email = current_user.email
-
         cursor = mysql.connection.cursor()
-        cursor.execute(
-            'UPDATE admins_account SET admin_email = % s WHERE admin_id = % s', (
-                admin_email, current_user.id,)
-        )
+        # cursor.execute(
+        #     'UPDATE admins_account SET admin_email = % s WHERE admin_id = % s', (
+        #         admin_email, current_user.id,)
+        # )
         mysql.connection.commit()
         cursor.close()
 

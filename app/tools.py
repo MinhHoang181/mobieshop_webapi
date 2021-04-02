@@ -52,7 +52,7 @@ def token_required_customer(f):
             token = request.headers["x-access-token"] 
         # trả về 401 nếu không có token
         if not token: 
-            return jsonify({"msg" : "Token is missing !", "status" : False}), 401
+            return jsonify(msg = "Token is missing !", status = False), 401
         try: 
             # giải mã token lấy dữ liệu
             data = s.loads(token.encode("utf-8"))
@@ -65,15 +65,21 @@ def token_required_customer(f):
                     data["customer_name"],)
             )
             current_user = cursor.fetchone()
-            # đóng kết nối database
-            mysql.connection.commit()
-            cursor.close()
-
             if not current_user:
-                return jsonify({"msg" : "Token is invalid !", "status" : False}), 401
+                return jsonify(msg = "Token is invalid !", status = False), 401
+            # kiểm tra xem token có trong blacklist không
+            cursor.execute(
+                'SELECT * FROM blacklist_token_customer WHERE customer_id = % s AND token = % s', 
+                    (current_user["customer_id"], token))
+            check = cursor.fetchone()
+            if check:
+                return jsonify(msg = "Token is invalid !", status = False), 401
+
+            # đóng kết nối databases
+            cursor.close()
         # nếu các bước trên bị lỗi thì coi như token không hợp lệ
         except: 
-            return jsonify({"msg" : "Token is invalid !", "status" : False}), 401
+            return jsonify(msg = "Token is invalid !", status = False), 401
         # trả về người dùng hiện tại
         return  f(current_user, *args, **kwargs) 
     return decorated
@@ -104,14 +110,23 @@ def token_required_admin(f):
                     data["admin_name"],)
             )
             current_user = cursor.fetchone()
-            # đóng kết nối database
-            cursor.close()
 
             if not current_user:
                 return jsonify({"msg" : "Token is invalid !", "status" : False}), 401
+
+            # kiểm tra xem token có trong blacklist không
+            cursor.execute(
+                'SELECT * FROM blacklist_token_admin WHERE admin_id = % s AND token = % s', 
+                    (current_user["admin_id"], token))
+            check = cursor.fetchone()
+            if check:
+                return jsonify(msg = "Token is invalid !", status = False), 401
+
+            # đóng kết nối database
+            cursor.close()
         # nếu các bước trên bị lỗi thì coi như token không hợp lệ
         except: 
-            return jsonify({"msg" : "Token is invalid !", "status" : False}), 401
+            return jsonify(msg = "Token is invalid !", status = False), 401
         # trả về người dùng hiện tại
         return  f(current_user, *args, **kwargs) 
     return decorated 
@@ -137,12 +152,11 @@ def permission_required(permission, action):
             check = cursor.fetchone()
     
             # đóng kết nối database
-            mysql.connection.commit()
             cursor.close()
 
             # nếu không có quyền đó thì trả về tin nhắn và báo lỗi 401
             if not check:
-                return jsonify({"msg" : "You don't have permission !", "status" : False}), 401 
+                return jsonify(msg= "You don't have permission !", status = False), 401 
             
             # nếu có thì tiếp tục thực hiện API
             return f(*args, **kwargs)

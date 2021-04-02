@@ -7,6 +7,7 @@ class Customer():
         self.id = current_user["customer_id"] if current_user else None
         self.name = current_user["customer_name"] if current_user else None
         self.password_hash = current_user["customer_password"] if current_user else None
+        self.email = current_user["customer_email"] if current_user else None
         self.address = current_user["customer_address"] if current_user else None
         self.phone = current_user["customer_phone"] if current_user else None
 
@@ -16,7 +17,6 @@ class Admin():
         self.id = current_user["admin_id"] if current_user else None
         self.name = current_user["admin_name"] if current_user else None
         self.password_hash = current_user["admin_password"] if current_user else None
-        self.email = current_user["admin_email"] if current_user else None
         self.role = current_user["admin_role"] if current_user else None
 
 # chức vụ
@@ -91,6 +91,7 @@ class Product():
         self.description = product["product_description"] if product else None
         self.default_price = product["product_default_price"] if product else None
         self.sale_price = product["product_sale_price"] if product else None
+        self.time_warranty = product["time_warranty"] if product else None
         self.last_update_when = product["product_last_update_when"] if product else None
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)

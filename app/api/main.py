@@ -51,6 +51,7 @@ def get_product():
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
+                    "time_warranty": data.time_warranty
                 }
                 status = True
             else:
@@ -85,6 +86,7 @@ def get_product_all():
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
+                    "time_warranty": row.time_warranty
                 }
                 products.append(product)
             status = True

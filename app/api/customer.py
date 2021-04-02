@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify
-from ..tools import password, verify_password, generate_jwt_customer, token_required_customer
-from .. import mysql
+from app.tools import password, verify_password, generate_jwt_customer, token_required_customer
+from app import mysql
 import MySQLdb.cursors
-from ..models import Customer
+from app.models import Customer
+from datetime import datetime
 
 customer = Blueprint("customer", __name__)
 
@@ -14,7 +15,7 @@ customer = Blueprint("customer", __name__)
 #------------------------------------------
 @customer.route("/login", methods=["POST"])
 def login():
-    loggedin = False
+    status = False
     user = []
     msg = ""
     access_token = ""
@@ -46,13 +47,13 @@ def login():
                 msg = "Password is not correct"
             # neu dung tai khoan trong DB
             else:
-                loggedin = True
+                status = True
                 user = {
                     "customer_id": account["customer_id"],
                     "customer_name": account["customer_name"],
                 }
                 access_token = generate_jwt_customer(account["customer_name"])
-    return jsonify(loggedin=loggedin, msg=msg, access_token=access_token, user=user)
+    return jsonify(status=status, msg=msg, access_token=access_token, user=user)
 
 # Đăng ký
 #---------------------------------------------
@@ -67,6 +68,7 @@ def register():
 
         customer_name = data["customer_name"] if "customer_name" in data else None
         customer_password = data["customer_password"] if "customer_password" in data else None
+        customer_email = data["customer_email"] if "customer_email" in data else None
         customer_address = data["customer_address"] if "customer_address" in data else None
         customer_phone = data["customer_phone"] if "customer_phone" in data else None
 
@@ -74,6 +76,8 @@ def register():
             msg = "Customer name is missing"
         elif not customer_password:
             msg = "Customer password is missing"
+        elif not customer_email:
+            msg = "Customer email is missing"
         else:
             cursor = mysql.connection.cursor()
             cursor.execute(
@@ -83,7 +87,7 @@ def register():
                 msg = "Account already exists !"
             else:
                 cursor.execute(
-                    'INSERT INTO customers_account VALUES (NULL, % s, % s, % s, % s)', (customer_name, password(customer_password), customer_address, customer_phone, ))
+                    'INSERT INTO customers_account VALUES (NULL, % s, % s, % s, % s, % s)', (customer_name, password(customer_password), customer_email, customer_address, customer_phone, ))
                 mysql.connection.commit()
                 cursor.close()
 
@@ -92,6 +96,28 @@ def register():
 
     return jsonify(status=status, msg=msg)
 
+# Đăng xuất
+#------------------------------------------
+@customer.route("/logout", methods=["GET"])
+@token_required_customer
+def logout(current_user):
+    status = False
+    msg = ""
+    if request.method == "GET":
+        customer_id = current_user["customer_id"]
+        token = request.headers["x-access-token"] 
+        created = datetime.now()
+
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'INSERT INTO blacklist_token_customer VALUES (% s, % s, % s)', (customer_id, token, created))
+        mysql.connection.commit()
+        cursor.close()
+
+        status = True
+        msg = "You have logout!"
+    return jsonify(status=status, msg=msg)
+    
 # Xem thông tin cá nhân
 #--------------------------------------------
 @customer.route("/profile", methods=["GET"])
@@ -104,6 +130,7 @@ def profile(current_user):
         user = {
             "customer_id" : current_user.id,
             "customer_name" : current_user.name,
+            "customer_email" : current_user.email,
             "customer_address" : current_user.address,
             "customer_phone" : current_user.phone
         }
@@ -126,7 +153,7 @@ def edit_profile_customer(current_user):
 
         customer_address = data["customer_address"] if "customer_address" in data else None
         customer_phone = data["customer_phone"] if "customer_phone" in data else None
-
+        
         if not customer_address:
             customer_address = current_user.address
         if not customer_phone:

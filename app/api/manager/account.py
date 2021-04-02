@@ -43,6 +43,7 @@ def get_customer(current_user):
             customer = {
                 "customer_id" : user.id,
                 "customer_name" : user.name,
+                "customer_email" : user.email,
                 "customer_address" : user.address,
                 "customer_phone" : user.phone
             }
@@ -73,6 +74,7 @@ def get_customers_all(current_user):
                 customer = {
                     "customer_id" : user.id,
                     "customer_name" : user.name,
+                    "customer_email" : user.email,
                     "customer_address" : user.address,
                     "customer_phone" : user.phone
                 }
@@ -237,7 +239,6 @@ def get_admin(current_user):
             admin = {
                 "admin_id" : user.id,
                 "admin_name" : user.name,
-                "admin_email" : user.email,
                 "admin_role" : user.role
             }
             status = True
@@ -267,7 +268,6 @@ def get_admins_all(current_user):
                 admin = {
                     "admin_id" : user.id,
                     "admin_name" : user.name,
-                    "admin_email" : user.email,
                     "admin_role" : user.role
                 }
                 admins.append(admin)
@@ -291,8 +291,7 @@ def create_admin(current_user):
 
         admin_name = data["admin_name"] if "admin_name" in data else None
         admin_password = data["admin_password"] if "admin_name" in data else None
-        admin_email = data["admin_email"] if "admin_email" in data else None
-        admin_role = data["admin_role"] if "admin_role" in data else 1
+        admin_role = data["admin_role"] if "admin_role" in data else None
 
         if not admin_name:
             msg = "Admin name is missing"
@@ -307,7 +306,7 @@ def create_admin(current_user):
                 msg = "Account already exists !"
             else:
                 cursor.execute(
-                    'INSERT INTO admins_account VALUES (NULL, % s, % s, % s, % s)', (admin_name, password(admin_password), admin_email, admin_role, ))
+                    'INSERT INTO admins_account VALUES (NULL, % s, % s, % s)', (admin_name, password(admin_password), admin_role, ))
                 mysql.connection.commit()
                 cursor.close()
 
@@ -333,7 +332,6 @@ def edit_admin(current_user):
         admin_id = data["admin_id"] if "admin_id" in data else None
         admin_name = data["admin_name"] if "admin_name" in data else None
         admin_password = data["admin_password"] if "admin_password" in data else None
-        admin_email = data["admin_email"] if "admin_email" in data else None
         admin_role = data["admin_role"] if "admin_role" in data else None
 
         # nếu thiếu id
@@ -367,13 +365,11 @@ def edit_admin(current_user):
                 # riêng thằng password thì băm ra mới lưu
                 else:
                     admin_password = password(admin_password)
-                if not admin_email:
-                    admin_email = admin.email
                 if not admin_role:
                     admin_role = admin.role
                 cursor.execute(
-                    'UPDATE admins_account SET admin_name = % s, admin_password = % s, admin_email = % s, admin_role = % s WHERE admin_id = % s', (
-                        admin_name, admin_password, admin_email, admin_role, admin_id,)
+                    'UPDATE admins_account SET admin_name = % s, admin_password = % s, admin_role = % s WHERE admin_id = % s', (
+                        admin_name, admin_password, admin_role, admin_id,)
                 )
                 mysql.connection.commit()
                 cursor.close()

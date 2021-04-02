@@ -47,6 +47,7 @@ def get_product(current_user):
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
+                    "time_warranty": data.time_warranty,
                     "product_last_update_who": {
                         "admin_id": data.last_update_who.id,
                         "admin_name": data.last_update_who.name
@@ -88,6 +89,7 @@ def get_product_all(current_user):
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
+                    "time_warranty": row.time_warranty,
                     "product_last_update_who": {
                         "admin_id": row.last_update_who.id,
                         "admin_name": row.last_update_who.name
@@ -117,6 +119,7 @@ def add_product(current_user):
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else None
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
+        time_warranty = data["time_warranty"] if "time_warranty" in data else None
         product_last_update_when = datetime.now()
 
         if not product_name:
@@ -127,8 +130,8 @@ def add_product(current_user):
 
             cursor = mysql.connection.cursor()
             cursor.execute(
-                'INSERT INTO products VALUES (NULL, % s, % s, % s, % s, % s, % s, % s, % s)', (
-                    product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, current_user.id, product_last_update_when)
+                'INSERT INTO products VALUES (NULL, % s, % s, % s, % s, % s, % s, % s, % s, % s)', (
+                    product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, time_warranty, current_user.id, product_last_update_when)
             )
             mysql.connection.commit()
             cursor.close()
@@ -157,6 +160,7 @@ def edit_product(current_user):
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else None
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
+        time_warranty = data["time_warranty"] if "time_warranty" in data else None
         product_last_update_when = datetime.now()
 
         # Nếu không có id thì báo lỗi
@@ -188,10 +192,12 @@ def edit_product(current_user):
                     product_default_price = product.default_price
                 if not product_sale_price:
                     product_sale_price = product.sale_price
+                if not time_warranty:
+                    time_warranty = product.time_warranty
 
                 cursor.execute(
-                    'UPDATE `products` SET `product_name` = % s, `brand_id` = % s, `product_thumbnail` = % s, `product_description` = % s, `product_default_price` = % s, `product_sale_price` = % s, `product_last_update_who` = % s, `product_last_update_when` = % s WHERE `products`.`product_id` = % s', (
-                        product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, current_user.id, product_last_update_when, product_id)
+                    'UPDATE `products` SET `product_name` = % s, `brand_id` = % s, `product_thumbnail` = % s, `product_description` = % s, `product_default_price` = % s, `product_sale_price` = % s, `time_warranty` = % s, `product_last_update_who` = % s, `product_last_update_when` = % s WHERE `products`.`product_id` = % s', (
+                        product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, time_warranty, current_user.id, product_last_update_when, product_id)
                 )
                 mysql.connection.commit()
 
