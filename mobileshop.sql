@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Mar 28, 2021 at 12:52 PM
+-- Generation Time: Apr 02, 2021 at 06:52 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -47,7 +47,6 @@ CREATE TABLE `admins_account` (
   `admin_id` int(11) NOT NULL,
   `admin_name` varchar(100) NOT NULL,
   `admin_password` varchar(100) NOT NULL,
-  `admin_email` varchar(100) NOT NULL,
   `admin_role` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -55,8 +54,22 @@ CREATE TABLE `admins_account` (
 -- Dumping data for table `admins_account`
 --
 
-INSERT INTO `admins_account` (`admin_id`, `admin_name`, `admin_password`, `admin_email`, `admin_role`) VALUES
-(1, 'admin', 'pbkdf2:sha256:150000$eNJoRNpd$f3278a88d02190f47dda3f04ab2fd3c1f6929c222ac00f5bf8d03fa6cf79c441', 'test', 'admin');
+INSERT INTO `admins_account` (`admin_id`, `admin_name`, `admin_password`, `admin_role`) VALUES
+(1, 'admin', 'pbkdf2:sha256:150000$eNJoRNpd$f3278a88d02190f47dda3f04ab2fd3c1f6929c222ac00f5bf8d03fa6cf79c441', 'admin');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `bills`
+--
+
+CREATE TABLE `bills` (
+  `bill_id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `fee_ship` int(11) NOT NULL,
+  `total` int(11) NOT NULL,
+  `time_create` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -102,23 +115,16 @@ INSERT INTO `carts` (`cart_id`, `customer_id`, `product_id`, `quantity`, `date_t
 -- --------------------------------------------------------
 
 --
--- Table structure for table `coupon`
+-- Table structure for table `comments`
 --
 
-CREATE TABLE `coupon` (
-  `coupon_id` int(11) NOT NULL,
-  `coupon_name` varchar(100) NOT NULL,
-  `coupon_code` varchar(100) NOT NULL,
-  `coupon_discount` double NOT NULL
+CREATE TABLE `comments` (
+  `comment_id` int(11) NOT NULL,
+  `customer_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `content` varchar(1000) NOT NULL,
+  `time` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `coupon`
---
-
-INSERT INTO `coupon` (`coupon_id`, `coupon_name`, `coupon_code`, `coupon_discount`) VALUES
-(1, 'Apple', 'dsd7116dasd', 17.2),
-(2, 'Samsung', 'dasdsadsadsa', 17.2);
 
 -- --------------------------------------------------------
 
@@ -130,6 +136,7 @@ CREATE TABLE `customers_account` (
   `customer_id` int(11) NOT NULL,
   `customer_name` varchar(100) NOT NULL,
   `customer_password` varchar(100) NOT NULL,
+  `customer_email` varchar(100) NOT NULL,
   `customer_address` varchar(100) DEFAULT NULL,
   `customer_phone` varchar(100) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -138,8 +145,8 @@ CREATE TABLE `customers_account` (
 -- Dumping data for table `customers_account`
 --
 
-INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_address`, `customer_phone`) VALUES
-(1, 'customer', 'pbkdf2:sha256:150000$bIJTWeV8$7a5ed70a10399da2228144bfcde8d5880497a723068ff74cc37ed4745afdf1e9', 'test', '');
+INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_email`, `customer_address`, `customer_phone`) VALUES
+(1, 'customer', 'pbkdf2:sha256:150000$bIJTWeV8$7a5ed70a10399da2228144bfcde8d5880497a723068ff74cc37ed4745afdf1e9', '', 'test', '');
 
 -- --------------------------------------------------------
 
@@ -148,16 +155,11 @@ INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_passw
 --
 
 CREATE TABLE `orders` (
-  `order_id` int(11) NOT NULL,
-  `customer_id` int(11) DEFAULT NULL,
-  `order_date` date DEFAULT NULL,
-  `order_sub_total_price` int(11) DEFAULT NULL,
-  `order_shipping` int(11) DEFAULT NULL,
-  `coupon_code` varchar(100) DEFAULT NULL,
-  `order_total_price` int(11) DEFAULT NULL,
-  `order_status` varchar(100) DEFAULT NULL,
-  `order_last_update_who` int(11) DEFAULT NULL,
-  `order_last_update_when` date DEFAULT NULL
+  `customer_id` int(11) NOT NULL,
+  `bill_id` int(11) NOT NULL,
+  `status` tinyint(1) NOT NULL DEFAULT '0',
+  `last_who_update` int(11) DEFAULT NULL,
+  `last_when_update` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
@@ -235,6 +237,7 @@ CREATE TABLE `products` (
   `product_description` varchar(1000) DEFAULT NULL,
   `product_default_price` bigint(20) DEFAULT NULL,
   `product_sale_price` bigint(20) DEFAULT NULL,
+  `time_warranty` int(11) NOT NULL DEFAULT '0',
   `product_last_update_who` int(11) DEFAULT NULL,
   `product_last_update_when` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -243,9 +246,33 @@ CREATE TABLE `products` (
 -- Dumping data for table `products`
 --
 
-INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumbnail`, `product_description`, `product_default_price`, `product_sale_price`, `product_last_update_who`, `product_last_update_when`) VALUES
-(1, 'IPhone Xsmas', 1, 'New IPhone 2019', 'This is IPhone for description', 1300, 1200, 1, '2021-03-17 00:00:00'),
-(2, 'IPhone 12 Pro Max', 1, 'New IPhone 2020', 'This is IPhone Pro Max for description', 2300, 2200, 1, '2021-03-17 00:00:00');
+INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumbnail`, `product_description`, `product_default_price`, `product_sale_price`, `time_warranty`, `product_last_update_who`, `product_last_update_when`) VALUES
+(1, 'IPhone Xsmas', 1, 'New IPhone 2019', 'This is IPhone for description', 1300, 1200, 0, 1, '2021-03-17 00:00:00'),
+(2, 'IPhone 12 Pro Max', 1, 'New IPhone 2020', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-03-17 00:00:00');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_bill`
+--
+
+CREATE TABLE `product_bill` (
+  `bill_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_image`
+--
+
+CREATE TABLE `product_image` (
+  `product_image_id` int(11) NOT NULL,
+  `product_id` int(11) NOT NULL,
+  `image` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- --------------------------------------------------------
 
@@ -269,17 +296,16 @@ INSERT INTO `roles` (`role_id`, `role_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Table structure for table `warranty`
+-- Table structure for table `warranties`
 --
 
-CREATE TABLE `warranty` (
-  `warranty_id` int(11) NOT NULL,
+CREATE TABLE `warranties` (
+  `warranty` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `seri_number` int(11) NOT NULL,
-  `description` varchar(256) NOT NULL,
-  `status` tinyint(1) NOT NULL,
-  `date` datetime NOT NULL
+  `bill_id` int(11) NOT NULL,
+  `start` date NOT NULL,
+  `end` date NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -298,9 +324,14 @@ ALTER TABLE `actions`
 --
 ALTER TABLE `admins_account`
   ADD PRIMARY KEY (`admin_id`),
-  ADD UNIQUE KEY `admin_email` (`admin_email`),
   ADD UNIQUE KEY `admin_name` (`admin_name`) USING BTREE,
   ADD KEY `admin_role` (`admin_role`);
+
+--
+-- Indexes for table `bills`
+--
+ALTER TABLE `bills`
+  ADD PRIMARY KEY (`bill_id`);
 
 --
 -- Indexes for table `brands`
@@ -317,25 +348,28 @@ ALTER TABLE `carts`
   ADD KEY `product_id` (`product_id`);
 
 --
--- Indexes for table `coupon`
+-- Indexes for table `comments`
 --
-ALTER TABLE `coupon`
-  ADD PRIMARY KEY (`coupon_id`);
+ALTER TABLE `comments`
+  ADD PRIMARY KEY (`comment_id`),
+  ADD KEY `customer_id` (`customer_id`),
+  ADD KEY `product_id` (`product_id`);
 
 --
 -- Indexes for table `customers_account`
 --
 ALTER TABLE `customers_account`
   ADD PRIMARY KEY (`customer_id`),
-  ADD UNIQUE KEY `customer_name` (`customer_name`);
+  ADD UNIQUE KEY `customer_name` (`customer_name`),
+  ADD UNIQUE KEY `customer_email` (`customer_email`);
 
 --
 -- Indexes for table `orders`
 --
 ALTER TABLE `orders`
-  ADD PRIMARY KEY (`order_id`),
-  ADD KEY `customer_id` (`customer_id`),
-  ADD KEY `order_last_update_who` (`order_last_update_who`);
+  ADD PRIMARY KEY (`customer_id`,`bill_id`),
+  ADD KEY `bill_id` (`bill_id`),
+  ADD KEY `last_who_update` (`last_who_update`);
 
 --
 -- Indexes for table `permissions`
@@ -362,6 +396,20 @@ ALTER TABLE `products`
   ADD KEY `product_last_update_who` (`product_last_update_who`);
 
 --
+-- Indexes for table `product_bill`
+--
+ALTER TABLE `product_bill`
+  ADD PRIMARY KEY (`bill_id`,`product_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- Indexes for table `product_image`
+--
+ALTER TABLE `product_image`
+  ADD PRIMARY KEY (`product_image_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
 -- Indexes for table `roles`
 --
 ALTER TABLE `roles`
@@ -369,12 +417,13 @@ ALTER TABLE `roles`
   ADD UNIQUE KEY `role_name` (`role_name`);
 
 --
--- Indexes for table `warranty`
+-- Indexes for table `warranties`
 --
-ALTER TABLE `warranty`
-  ADD PRIMARY KEY (`warranty_id`),
+ALTER TABLE `warranties`
+  ADD PRIMARY KEY (`warranty`),
   ADD KEY `customer_id` (`customer_id`),
-  ADD KEY `product_id` (`product_id`);
+  ADD KEY `product_id` (`product_id`),
+  ADD KEY `bill_id` (`bill_id`);
 
 --
 -- AUTO_INCREMENT for dumped tables
@@ -393,6 +442,12 @@ ALTER TABLE `admins_account`
   MODIFY `admin_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `bills`
+--
+ALTER TABLE `bills`
+  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `brands`
 --
 ALTER TABLE `brands`
@@ -405,22 +460,16 @@ ALTER TABLE `carts`
   MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
--- AUTO_INCREMENT for table `coupon`
+-- AUTO_INCREMENT for table `comments`
 --
-ALTER TABLE `coupon`
-  MODIFY `coupon_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+ALTER TABLE `comments`
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `customers_account`
 --
 ALTER TABLE `customers_account`
   MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `orders`
---
-ALTER TABLE `orders`
-  MODIFY `order_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `permissions`
@@ -441,16 +490,22 @@ ALTER TABLE `products`
   MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT for table `product_image`
+--
+ALTER TABLE `product_image`
+  MODIFY `product_image_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
   MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
--- AUTO_INCREMENT for table `warranty`
+-- AUTO_INCREMENT for table `warranties`
 --
-ALTER TABLE `warranty`
-  MODIFY `warranty_id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `warranties`
+  MODIFY `warranty` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints for dumped tables
@@ -470,11 +525,19 @@ ALTER TABLE `carts`
   ADD CONSTRAINT `carts_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
+-- Constraints for table `comments`
+--
+ALTER TABLE `comments`
+  ADD CONSTRAINT `comments_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `comments_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `orders`
 --
 ALTER TABLE `orders`
   ADD CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`order_last_update_who`) REFERENCES `admins_account` (`admin_id`);
+  ADD CONSTRAINT `orders_ibfk_2` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`bill_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `orders_ibfk_3` FOREIGN KEY (`last_who_update`) REFERENCES `admins_account` (`admin_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
 -- Constraints for table `permission_role`
@@ -492,9 +555,23 @@ ALTER TABLE `products`
   ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`product_last_update_who`) REFERENCES `admins_account` (`admin_id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
--- Constraints for table `warranty`
+-- Constraints for table `product_bill`
 --
-ALTER TABLE `warranty`
-  ADD CONSTRAINT `warranty_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `warranty_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `product_bill`
+  ADD CONSTRAINT `product_bill_ibfk_1` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`bill_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `product_bill_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `product_image`
+--
+ALTER TABLE `product_image`
+  ADD CONSTRAINT `product_image_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Constraints for table `warranties`
+--
+ALTER TABLE `warranties`
+  ADD CONSTRAINT `warranties_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `warranties_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `warranties_ibfk_3` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`bill_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 SET FOREIGN_KEY_CHECKS=1;
