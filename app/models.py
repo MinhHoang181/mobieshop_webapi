@@ -142,10 +142,11 @@ class Bill():
             'SELECT * FROM customers_account WHERE customer_id = % s', (bill["customer_id"], ) 
         )
         data = cursor.fetchone()
-        self.customer = {
-            "customer_id": data["customer_id"],
-            "customer_name": data["customer_name"]
-        }
+        if data:
+            self.customer = {
+                "customer_id": data["customer_id"],
+                "customer_name": data["customer_name"]
+            }
 
         # Lấy thông tin sản phẩm
         self.products = []
@@ -173,3 +174,34 @@ class Bill():
         for product in self.products:
             self.total += product["product_total"]
         self.total -= self.fee_ship
+
+class Order():
+    def __init__(self, order):
+        self.bill = order["bill_id"]
+        self.status = order["status"]
+        self.last_update = order["last_when_update"]
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        # lấy thông tin khách hàng
+        self.customer = {}
+        cursor.execute(
+            'SELECT * FROM customers_account WHERE customer_id = % s', (order["customer_id"], ) 
+        )
+        data = cursor.fetchone()
+        if data:
+            self.customer = {
+                "customer_id": data["customer_id"],
+                "customer_name": data["customer_name"]
+            }
+        # lấy thông tin quản trị viên cập nhật
+        self.admin = {}
+        cursor.execute(
+            'SELECT * FROM admins_account WHERE admin_id = % s', (order["last_who_update"], ) 
+        )
+        data = cursor.fetchone()
+        if data:
+            self.admin = {
+                "admin_id": data["admin_id"],
+                "admin_name": data["admin_name"]
+            }
+        

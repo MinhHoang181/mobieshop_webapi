@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.tools import password, verify_password, generate_jwt_customer, token_required_customer
 from app import mysql
 import MySQLdb.cursors
-from app.models import Bill, Cart, Customer
+from app.models import Bill, Cart, Customer, Order
 from datetime import datetime
 
 customer = Blueprint("customer", __name__)
@@ -385,7 +385,18 @@ def get_bill_all(current_user):
             'SELECT * FROM bills WHERE customer_id = % s', 
             (current_user.id,))
         data = cursor.fetchall()
-        bills=data
+        if data:
+            for row in data:
+                row = Bill(row)
+                bill = {
+                    "bill_id": data.id,
+                    "customer": data.customer,
+                    "products": data.products,
+                    "fee_ship": data.fee_ship,
+                    "total": data.total
+                }
+                status = True
+
     return jsonify(status=status, msg=msg, bills=bills)
 
 # Tạo hoá đơn
@@ -439,3 +450,79 @@ def create_bill(current_user):
         else:
             msg = "Don't have any product in cart to create bill"
     return jsonify(status=status, msg=msg, bill=bill_detail)
+
+#############
+# ĐƠN HÀNG #
+###########
+
+# xem tất cả đơn đặt hàng
+@customer.route("/order/all", methods=["GET"])
+@token_required_customer
+def get_order_all(current_user):
+    status = False
+    msg = ""
+    orders = []
+    if request.method == "GET":
+        current_user = Customer(current_user)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM orders WHERE customer_id = % s', (current_user.id, )
+        )
+        data = cursor.fetchall()
+        if data:
+            for row in data:
+                row = Order(row)
+                order = {
+                    "bill_id": row.bill,
+                    "customer": row.customer,
+                    "status": row.status,
+                }
+                orders.append(order)
+            status = True
+        else:
+            msg = "Access database error or Order empty"
+    return jsonify(status=status, msg=msg, orders=orders)
+
+
+# tạo đơn đặt hàng
+#--------------------------
+@customer.route("/order/create", methods=["POST"])
+@token_required_customer
+def create_order(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        bill_id = data["bill_id"] if "bill_id" in data else None
+        time = datetime.now()
+
+        if not bill_id:
+            msg = "Bill id is missing"
+        else:
+            cursor = mysql.connection.cursor()
+            cursor.execute(
+                'SELECT * FROM bills WHERE bill_id = % s', 
+                (bill_id,)
+            )
+            check = cursor.fetchone()
+            if check:
+                cursor.execute(
+                    'SELECT * FROM orders WHERE bill_id = % s', 
+                    (bill_id,)
+                )
+                check = cursor.fetchone()
+                if check:
+                    msg = "Order already exist"
+                else:
+                    current_user = Customer(current_user)
+                    cursor.execute(
+                        'INSERT INTO orders(customer_id, bill_id, last_when_update) VALUES (% s, % s, % s)',
+                        (current_user.id, bill_id, time,)
+                    )
+                    mysql.connection.commit()
+                    status = True
+                    msg = "Order has been create"
+            else:
+                msg = "Bill doesn't exist"
+            cursor.close()
+    return jsonify(status=status, msg=msg)
