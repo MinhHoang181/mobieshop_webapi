@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 03, 2021 at 06:35 AM
+-- Generation Time: Apr 03, 2021 at 08:06 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -66,8 +66,8 @@ INSERT INTO `admins_account` (`admin_id`, `admin_name`, `admin_password`, `admin
 CREATE TABLE `bills` (
   `bill_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `fee_ship` int(11) NOT NULL,
-  `total` int(11) NOT NULL,
+  `fee_ship` int(11) NOT NULL DEFAULT '0',
+  `total` int(11) NOT NULL DEFAULT '0',
   `time_create` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -126,6 +126,14 @@ CREATE TABLE `carts` (
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `carts`
+--
+
+INSERT INTO `carts` (`customer_id`, `product_id`, `quantity`) VALUES
+(1, 1, 2),
+(1, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -360,7 +368,8 @@ ALTER TABLE `admins_account`
 -- Indexes for table `bills`
 --
 ALTER TABLE `bills`
-  ADD PRIMARY KEY (`bill_id`);
+  ADD PRIMARY KEY (`bill_id`),
+  ADD KEY `customer_id` (`customer_id`);
 
 --
 -- Indexes for table `blacklist_token_admin`
@@ -552,6 +561,12 @@ ALTER TABLE `admins_account`
   ADD CONSTRAINT `admins_account_ibfk_1` FOREIGN KEY (`admin_role`) REFERENCES `roles` (`role_name`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 --
+-- Constraints for table `bills`
+--
+ALTER TABLE `bills`
+  ADD CONSTRAINT `bills_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
 -- Constraints for table `blacklist_token_customer`
 --
 ALTER TABLE `blacklist_token_customer`
@@ -614,17 +629,4 @@ ALTER TABLE `warranties`
   ADD CONSTRAINT `warranties_ibfk_1` FOREIGN KEY (`customer_id`) REFERENCES `customers_account` (`customer_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `warranties_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `warranties_ibfk_3` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`bill_id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
-DELIMITER $$
---
--- Events
---
-CREATE DEFINER=`root`@`localhost` EVENT `remove_token_timeout` ON SCHEDULE EVERY 1 HOUR STARTS '2021-04-02 20:29:18' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
-DELETE FROM blacklist_token_customer WHERE blacklist_token_customer.created <= DATE_SUB(NOW(), INTERVAL 1 HOUR);
-
-DELETE FROM blacklist_token_admin WHERE blacklist_token_admin.created <= DATE_SUB(NOW(), INTERVAL 1 HOUR);
-
-END$$
-
-DELIMITER ;
 SET FOREIGN_KEY_CHECKS=1;

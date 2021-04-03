@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.tools import password, verify_password, generate_jwt_customer, token_required_customer
 from app import mysql
 import MySQLdb.cursors
-from app.models import Cart, Customer
+from app.models import Bill, Cart, Customer
 from datetime import datetime
 
 customer = Blueprint("customer", __name__)
@@ -23,12 +23,12 @@ def login():
 
         data = request.json if request.json else []
 
-        customer_name = data["customer_name"] if "customer_name" in data else ""
-        customer_password = data["customer_password"] if "customer_password" in data else ""
+        customer_name = data["customer_name"] if "customer_name" in data else None
+        customer_password = data["customer_password"] if "customer_password" in data else None
 
-        if customer_name == "":
+        if not customer_name:
             msg = "Customer name is missing"
-        elif customer_password == "":
+        elif not customer_password:
             msg = "Customer password is missing"
         else:
         # ket noi database
@@ -38,7 +38,6 @@ def login():
                     customer_name,)
             )
             account = cursor.fetchone()
-            mysql.connection.commit()
             cursor.close()
 
             if not account:
@@ -47,12 +46,13 @@ def login():
                 msg = "Password is not correct"
             # neu dung tai khoan trong DB
             else:
+                account = Customer(account)
                 status = True
                 user = {
-                    "customer_id": account["customer_id"],
-                    "customer_name": account["customer_name"],
+                    "customer_id": account.id,
+                    "customer_name": account.name,
                 }
-                access_token = generate_jwt_customer(account["customer_name"])
+                access_token = generate_jwt_customer(account.name)
     return jsonify(status=status, msg=msg, access_token=access_token, user=user)
 
 # Đăng ký
@@ -117,6 +117,10 @@ def logout(current_user):
         status = True
         msg = "You have logout!"
     return jsonify(status=status, msg=msg)
+
+##########
+# HỒ SƠ #
+########
     
 # Xem thông tin cá nhân
 #--------------------------------------------
@@ -177,7 +181,7 @@ def edit_profile_customer(current_user):
 ###########
 
 # xem giỏ hàng
-#-----------------------
+#----------------------------------------
 @customer.route("/cart", methods=["GET"])
 @token_required_customer
 def get_cart(current_user):
@@ -332,7 +336,7 @@ def delete_cart(current_user):
 ##########
 
 # xem một hoá đơn bằng id
-#-----------------
+#----------------------------------------
 @customer.route("/bill", methods=["GET"])
 @token_required_customer
 def get_bill(current_user):
@@ -349,10 +353,89 @@ def get_bill(current_user):
             cursor.execute(
                 'SELECT * FROM bills WHERE bill_id = % s AND customer_id = % s', 
                 (bill_id, current_user.id))
-            bill = cursor.fetchone()
-            if bill:
+            data = cursor.fetchone()
+            if data:
+                data = Bill(data)
+                bill = {
+                    "bill_id": data.id,
+                    "customer": data.customer,
+                    "products": data.products,
+                    "fee_ship": data.fee_ship,
+                    "total": data.total
+                }
                 status = True
             else:
                 msg = "Access database is error"
             cursor.close()
     return jsonify(status=status, msg=msg, bill=bill)
+
+# Xem toàn bộ hoá đơn
+#-----------------
+@customer.route("/bill/all", methods=["GET"])
+@token_required_customer
+def get_bill_all(current_user):
+    status = False
+    msg = ""
+    bills = []
+
+    if request.method == "GET":
+        current_user = Customer(current_user)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM bills WHERE customer_id = % s', 
+            (current_user.id,))
+        data = cursor.fetchall()
+        bills=data
+    return jsonify(status=status, msg=msg, bills=bills)
+
+# Tạo hoá đơn
+#------------------------------------------------
+@customer.route("/bill/create", methods=["POST"])
+@token_required_customer
+def create_bill(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        current_user = Customer(current_user)
+        time_create = datetime.now()
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM carts WHERE customer_id = % s', (current_user.id,)
+        )
+        carts = cursor.fetchall()
+        if carts:
+            cursor.execute(
+                'INSERT INTO bills(customer_id, time_create) VALUE (% s, % s)', 
+                (current_user.id, time_create,)
+            )
+            bill_id = cursor.lastrowid
+            for cart in carts:
+                cursor.execute(
+                    'INSERT INTO product_bill VALUE(% s, % s, % s)',
+                    (bill_id, cart["product_id"], cart["quantity"],)
+                )
+            mysql.connection.commit()
+
+            cursor.execute(
+                'SELECT * FROM bills WHERE bill_id = % s', (bill_id,)
+            )
+            bill = cursor.fetchone()
+            bill = Bill(bill)
+            cursor.execute(
+                'UPDATE bills SET total = % s WHERE bill_id = % s', (bill.total, bill.id, )
+            )
+            mysql.connection.commit()
+            cursor.close()
+            status = True
+            msg = "Bill has been created"
+
+            bill_detail = {
+                "bill_id": bill.id,
+                "customer": bill.customer,
+                "products": bill.products,
+                "fee_ship": bill.fee_ship,
+                "total": bill.total
+            }
+        else:
+            msg = "Don't have any product in cart to create bill"
+    return jsonify(status=status, msg=msg, bill=bill_detail)

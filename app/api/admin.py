@@ -23,12 +23,12 @@ def login():
 
         data = request.json if request.json else []
 
-        admin_name = data["admin_name"] if "admin_name" in data else ""
-        admin_password = data["admin_password"] if "admin_password" in data else ""
+        admin_name = data["admin_name"] if "admin_name" in data else None
+        admin_password = data["admin_password"] if "admin_password" in data else None
 
-        if admin_name == "":
+        if not admin_name:
             msg = "Admin name is missing"
-        elif admin_password == "":
+        elif not admin_password:
             msg = "Admin password is missing"
         else:
             # ket noi database
@@ -39,19 +39,20 @@ def login():
             )
             account = cursor.fetchone()
             cursor.close()
-
             if not account:
                 msg = "Username is not exits"
             elif not verify_password(account["admin_password"], admin_password):
                 msg = "Password is not correct"
             # neu dung tai khoan trong DB
             else:
+                account = Admin(account)
                 status = True
                 user = {
-                    "admin_id": account["admin_id"],
-                    "admin_name": account["admin_name"],
+                    "admin_id": account.id,
+                    "admin_name": account.name,
+                    "admin_role": account.role
                 }
-                access_token = generate_jwt_admin(account["admin_name"])
+                access_token = generate_jwt_admin(account.name)
     return jsonify(status=status, msg=msg, access_token=access_token, user=user)
 
 # Đăng xuất

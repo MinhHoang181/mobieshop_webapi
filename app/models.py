@@ -131,7 +131,45 @@ class Cart():
 class Bill():
     def __init__(self, bill):
         self.id = bill["bill_id"] if bill else None
-        self.customer = bill["customer_id"] if bill else None
-        self.fee_ship = bill["fee_ship"] if bill else None
-        self.total = bill["total"] if bill else None
+        self.fee_ship = int(bill["fee_ship"]) if bill else 0
         self.time_create = bill["time_create"] if bill else None
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+
+        # lấy thông tin khách hàng
+        self.customer = {}
+        cursor.execute(
+            'SELECT * FROM customers_account WHERE customer_id = % s', (bill["customer_id"], ) 
+        )
+        data = cursor.fetchone()
+        self.customer = {
+            "customer_id": data["customer_id"],
+            "customer_name": data["customer_name"]
+        }
+
+        # Lấy thông tin sản phẩm
+        self.products = []
+        cursor.execute(
+            'SELECT product_id, quantity FROM product_bill WHERE bill_id = % s', (self.id, )
+        )
+        data = cursor.fetchall()
+        if data:
+            for row in data:
+                cursor.execute(
+                    'SELECT * FROM products WHERE product_id = % s', (row["product_id"], )
+                )
+                x = cursor.fetchone()
+                product = {
+                    "product_id": x["product_id"],
+                    "product_name": x["product_name"],
+                    "product_price": int(x["product_sale_price"]),
+                    "quantity": int(row["quantity"]),
+                    "product_total": int(x["product_sale_price"]) * int(row["quantity"])
+                }
+                self.products.append(product)
+
+        # lấy tổng tiền
+        self.total = 0
+        for product in self.products:
+            self.total += product["product_total"]
+        self.total -= self.fee_ship
