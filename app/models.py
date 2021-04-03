@@ -85,7 +85,7 @@ class Action():
 # Sản phẩm
 class Product():
     NUM_PER_PAGE = 12
-    
+
     def __init__(self, product):
         self.id = product["product_id"] if product else None
         self.name = product["product_name"] if product else None
@@ -114,10 +114,24 @@ class Brand():
         self.id = brand["brand_id"] if brand else None
         self.name = brand["brand_name"] if brand else None
 
-# Phiếu giảm giá
-class Coupon():
-    def __init__(self, coupon):
-        self.id = coupon["coupon_id"] if coupon else None
-        self.name = coupon["coupon_name"] if coupon else None
-        self.code = coupon["coupon_code"] if coupon else None
-        self.discount = coupon["coupon_discount"] if coupon else None
+# giỏ hàng
+class Cart():
+    def __init__(self, cart):
+        self.customer = cart['customer_id'] if cart else None
+        self.quantity = int(cart["quantity"]) if cart else None
+
+        # Lấy thông tin sản phẩm
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM products WHERE product_id = % s', (cart["product_id"], )
+        )
+        self.product = Product(cursor.fetchone())
+
+# hoá đơn
+class Bill():
+    def __init__(self, bill):
+        self.id = bill["bill_id"] if bill else None
+        self.customer = bill["customer_id"] if bill else None
+        self.fee_ship = bill["fee_ship"] if bill else None
+        self.total = bill["total"] if bill else None
+        self.time_create = bill["time_create"] if bill else None

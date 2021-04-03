@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from app.tools import password, verify_password, generate_jwt_customer, token_required_customer
 from app import mysql
 import MySQLdb.cursors
-from app.models import Customer
+from app.models import Cart, Customer
 from datetime import datetime
 
 customer = Blueprint("customer", __name__)
@@ -171,3 +171,188 @@ def edit_profile_customer(current_user):
         msg = "Your info has been updated!"
 
     return jsonify(status=status, msg=msg)
+
+#############
+# GIỎ HÀNG #
+###########
+
+# xem giỏ hàng
+#-----------------------
+@customer.route("/cart", methods=["GET"])
+@token_required_customer
+def get_cart(current_user):
+    status = False
+    msg = ""
+    cart = []
+    if request.method == "GET":
+        current_user = Customer(current_user)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM carts WHERE customer_id = % s', (current_user.id,))
+        data = cursor.fetchall()
+        cursor.close()
+        if data:
+            for row in data:
+                row = Cart(row)
+                product = {
+                    "product_id": row.product.id,
+                    "product_name": row.product.name,
+                    "product_price": row.product.sale_price,
+                    "quantity": row.quantity
+                }
+                cart.append(product)
+        status = True
+    return jsonify(status=status, msg=msg, cart=cart)
+
+# tạo giỏ hàng
+#------------------------------------------------
+@customer.route("/cart/create", methods=["POST"])
+@token_required_customer
+def create_cart(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        product_id = data["product_id"] if "product_id" in data else None
+        quantity = data["quantity"] if "quantity" in data else 1
+
+        # nếu thiếu product id
+        if not product_id:
+            msg = "Product id is missing"
+        else:
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            # kiểm tra xem id sản phẩm có tồn tại không
+            cursor.execute(
+                'SELECT * FROM products WHERE product_id = % s', (product_id,))
+            check = cursor.fetchone()
+            # nếu không báo lỗi
+            if not check:
+                msg = "Product doesn't exist"
+            # nếu có
+            else:
+                current_user = Customer(current_user)
+                # kiểm tra xem trong giỏ hàng có sản phẩm này chưa
+                cursor.execute(
+                    'SELECT * FROM carts WHERE customer_id = % s AND product_id = % s',
+                    (current_user.id, product_id,))
+                cart = cursor.fetchone()
+                # nếu có thì cập nhật lại số lượng
+                if cart:
+                    cart = Cart(cart)
+                    cursor.execute(
+                        'UPDATE carts SET quantity = % s WHERE customer_id = % s AND product_id = % s',
+                        (quantity + cart.quantity, cart.customer, cart.product.id,))
+                # nếu không thì tạo mới giỏ hàng
+                else:
+                    cursor.execute(
+                        'INSERT INTO carts VALUE (% s, % s, % s)',
+                        (current_user.id, product_id, quantity)
+                    )
+                status = True
+                msg = "Product added to cart"
+
+                mysql.connection.commit()
+                cursor.close()
+    return jsonify(status=status, msg=msg)
+
+# sửa giỏ hàng
+#----------------------------------------------
+@customer.route("/cart/edit", methods=["POST"])
+@token_required_customer
+def edit_cart(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        product_id = data["product_id"] if "product_id" in data else None
+        quantity = data["quantity"] if "quantity" in data else None
+
+        if not product_id:
+            msg = "Product id is missing"
+        elif not quantity:
+            msg = "Quantity is missing"
+        else:
+            current_user = Customer(current_user)
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute(
+                'SELECT * FROM carts WHERE customer_id = % s AND product_id = % s', 
+                (current_user.id, product_id, ))
+            cart = cursor.fetchone()
+            if cart:
+                cursor.execute(
+                    'UPDATE carts SET quantity = % s WHERE customer_id = % s AND product_id = % s', 
+                    (quantity, current_user.id, product_id))
+                status = True
+                msg = "Cart has been updated"
+            else:
+                msg = "Product doesn't exist in cart"
+            mysql.connection.commit()
+            cursor.close()
+
+    return jsonify(status=status, msg=msg)
+
+
+
+# xoá giỏ hàng
+# - biến truyền vào là id, nếu không có id nghĩa là xoá hết
+#------------------------------------------------
+@customer.route("/cart/delete", methods=["POST"])
+@token_required_customer
+def delete_cart(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        product_id = data["product_id"] if "product_id" in data else None
+        cursor = mysql.connection.cursor()
+        if product_id:
+            cursor.execute(
+                'SELECT * FROM carts WHERE product_id = % s', (product_id,))
+            check = cursor.fetchone()
+            if not check:
+                msg = "Product doesn't exist in cart"
+                return jsonify(status=status, msg=msg)
+
+        current_user = Customer(current_user)
+        
+        cursor.execute(
+            'DELETE FROM carts WHERE customer_id = % s AND (product_id = % s OR % s IS NULL)', 
+            (current_user.id ,product_id, product_id,))
+        status = True
+        if product_id:
+            msg = "Product has been deleted from cart"
+        else:
+            msg = "All product has been deleted from cart"
+        mysql.connection.commit()
+        cursor.close()
+    return jsonify(status=status, msg=msg)
+
+############
+# HOÁ ĐƠN #
+##########
+
+# xem một hoá đơn bằng id
+#-----------------
+@customer.route("/bill", methods=["GET"])
+@token_required_customer
+def get_bill(current_user):
+    status = False
+    msg = ""
+    bill = {}
+    if request.method == "GET":
+        bill_id = request.args.get("bill_id")
+        if not bill_id:
+            msg = "Bill id is missing"
+        else:
+            current_user = Customer(current_user)
+            cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            cursor.execute(
+                'SELECT * FROM bills WHERE bill_id = % s AND customer_id = % s', 
+                (bill_id, current_user.id))
+            bill = cursor.fetchone()
+            if bill:
+                status = True
+            else:
+                msg = "Access database is error"
+            cursor.close()
+    return jsonify(status=status, msg=msg, bill=bill)

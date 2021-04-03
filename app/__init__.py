@@ -47,8 +47,4 @@ def create_app():
     from .api.manager.brand import brand as brand_blueprint
     app.register_blueprint(brand_blueprint)
 
-    # API của quản lý phiếu mua hàng
-    from .api.manager.coupon import coupon as coupon_blueprint
-    app.register_blueprint(coupon_blueprint)
-
     return app

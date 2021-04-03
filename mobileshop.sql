@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 02, 2021 at 01:34 PM
+-- Generation Time: Apr 03, 2021 at 06:35 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -122,19 +122,10 @@ INSERT INTO `brands` (`brand_id`, `brand_name`) VALUES
 --
 
 CREATE TABLE `carts` (
-  `cart_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `date_time` datetime NOT NULL
+  `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `carts`
---
-
-INSERT INTO `carts` (`cart_id`, `customer_id`, `product_id`, `quantity`, `date_time`) VALUES
-(1, 2, 4, 2, '2021-03-19 10:19:47');
 
 -- --------------------------------------------------------
 
@@ -170,7 +161,7 @@ CREATE TABLE `customers_account` (
 --
 
 INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_email`, `customer_address`, `customer_phone`) VALUES
-(1, 'customer', 'pbkdf2:sha256:150000$bIJTWeV8$7a5ed70a10399da2228144bfcde8d5880497a723068ff74cc37ed4745afdf1e9', '', 'test', '');
+(1, 'customer', 'pbkdf2:sha256:150000$QheNYrFB$65dbd315da08b1cc81ff4c6f9f16510c83b0cb80234a3f705c9538b6afe89764', '', '1/1 Nguyễn Hữu Thọ', '');
 
 -- --------------------------------------------------------
 
@@ -272,7 +263,20 @@ CREATE TABLE `products` (
 
 INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumbnail`, `product_description`, `product_default_price`, `product_sale_price`, `time_warranty`, `product_last_update_who`, `product_last_update_when`) VALUES
 (1, 'IPhone Xsmas', 1, 'New IPhone 2019', 'This is IPhone for description', 1300, 1200, 0, 1, '2021-03-17 00:00:00'),
-(2, 'IPhone 12 Pro Max', 1, 'New IPhone 2020', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-03-17 00:00:00');
+(2, 'IPhone 12 Pro Max', 1, 'New IPhone 2020', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-03-17 00:00:00'),
+(3, 'test1', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:11'),
+(4, 'test2', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:15'),
+(5, 'test3', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:18'),
+(6, 'test4', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:22'),
+(7, 'test5', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:24'),
+(8, 'test6', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:28'),
+(9, 'test7', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:31'),
+(10, 'test8', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:34'),
+(11, 'test9', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:38'),
+(12, 'test10', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:41'),
+(13, 'test11', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:44'),
+(14, 'test12', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:47'),
+(15, 'test13', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:51');
 
 -- --------------------------------------------------------
 
@@ -315,6 +319,7 @@ CREATE TABLE `roles` (
 
 INSERT INTO `roles` (`role_id`, `role_name`) VALUES
 (1, 'admin'),
+(3, 'mod'),
 (2, 'sales');
 
 -- --------------------------------------------------------
@@ -379,8 +384,7 @@ ALTER TABLE `brands`
 -- Indexes for table `carts`
 --
 ALTER TABLE `carts`
-  ADD PRIMARY KEY (`cart_id`),
-  ADD KEY `customer_id` (`customer_id`),
+  ADD PRIMARY KEY (`customer_id`,`product_id`),
   ADD KEY `product_id` (`product_id`);
 
 --
@@ -490,12 +494,6 @@ ALTER TABLE `brands`
   MODIFY `brand_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
--- AUTO_INCREMENT for table `carts`
---
-ALTER TABLE `carts`
-  MODIFY `cart_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
@@ -523,7 +521,7 @@ ALTER TABLE `permission_role`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `product_image`
@@ -535,7 +533,7 @@ ALTER TABLE `product_image`
 -- AUTO_INCREMENT for table `roles`
 --
 ALTER TABLE `roles`
-  MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `warranties`
