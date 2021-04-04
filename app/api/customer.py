@@ -331,6 +331,27 @@ def delete_cart(current_user):
         cursor.close()
     return jsonify(status=status, msg=msg)
 
+@customer.route("/cart/total", methods=["GET"])
+@token_required_customer
+def caculate_total_cart(current_user):
+    status = False
+    msg = ""
+    total = 0
+    if request.method == "GET":
+        current_user = Customer(current_user)
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM carts WHERE customer_id = % s', (current_user.id,))
+        data = cursor.fetchall()
+        cursor.close()
+        if data:
+            for row in data:
+                row = Cart(row)
+                total += row.product.sale_price * row.quantity
+        status = True
+    return jsonify(status=status, msg=msg, total=total)
+    
+
 ############
 # HOÁ ĐƠN #
 ##########

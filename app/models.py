@@ -91,8 +91,8 @@ class Product():
         self.name = product["product_name"] if product else None
         self.thumbnail = product["product_thumbnail"] if product else None
         self.description = product["product_description"] if product else None
-        self.default_price = product["product_default_price"] if product else None
-        self.sale_price = product["product_sale_price"] if product else None
+        self.default_price = int(product["product_default_price"]) if product else None
+        self.sale_price = int(product["product_sale_price"]) if product else None
         self.time_warranty = product["time_warranty"] if product else None
         self.last_update_when = product["product_last_update_when"] if product else None
 
