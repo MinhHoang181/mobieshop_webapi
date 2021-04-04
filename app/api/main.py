@@ -87,7 +87,7 @@ def get_product_all():
         if data:
             if page:
                 first_index = (page - 1) * Product.NUM_PER_PAGE
-                last_index = first_index + Product.NUM_PER_PAGE - 1
+                last_index = first_index + Product.NUM_PER_PAGE
                 data = data[first_index:last_index]
             for row in data:
                 row = Product(row)
