@@ -347,7 +347,7 @@ def caculate_total_cart(current_user):
         if data:
             for row in data:
                 row = Cart(row)
-                total += row.product.sale_price * row.quantity
+                total += int(row.product.sale_price) * row.quantity
         status = True
     return jsonify(status=status, msg=msg, total=total)
     
