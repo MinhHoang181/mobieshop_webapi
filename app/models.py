@@ -215,4 +215,23 @@ class Order():
                 "admin_id": data["admin_id"],
                 "admin_name": data["admin_name"]
             }
+
+class Comment():
+    def __init__(self, comment):
+        self.id = comment["comment_id"] if comment else None
+        self.product = comment["product_id"] if comment else None
+        self.content = comment["content"] if comment else None
+        self.time = comment["time"] if comment else None
+        self.customer = {}
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM customers_account WHERE customer_id = % s', 
+            (comment["customer_id"],)
+        )
+        data = cursor.fetchone()
+        if data:
+            self.customer = {
+                "customer_id": data["customer_id"],
+                "customer_name": data["customer_name"]
+            }
         

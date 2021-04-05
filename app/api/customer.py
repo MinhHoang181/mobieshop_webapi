@@ -176,6 +176,40 @@ def edit_profile_customer(current_user):
 
     return jsonify(status=status, msg=msg)
 
+##############
+# BÌNH LUẬN #
+#############
+
+# viết bình luận
+#---------------------------------------------------
+@customer.route("/comment/create", methods=["POST"])
+@token_required_customer
+def create_comment(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        product_id = data["product_id"] if "product_id" in data else None
+        content = data["content"] if "content" in data else None
+    
+        if not product_id:
+            msg = "Product id is missing"
+        elif not content or content == "":
+            msg = "Content is missing"
+        else:
+            current_user = Customer(current_user)
+            time = datetime.now()
+            cursor = mysql.connection.cursor()
+            cursor.execute(
+                'INSERT INTO comments VALUE (NULL, % s, % s, % s, % s)', 
+                (current_user.id, product_id, content, time,)
+            )
+            mysql.connection.commit()
+            cursor.close()
+            status = True
+            msg = "comment add success"
+    return jsonify(status=status, msg=msg)
+
 #############
 # GIỎ HÀNG #
 ###########

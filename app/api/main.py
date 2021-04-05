@@ -1,5 +1,5 @@
 from flask import request, jsonify, Blueprint
-from app.models import Brand, Product
+from app.models import Brand, Comment, Product
 import MySQLdb.cursors
 from datetime import datetime
 from app import mysql
@@ -177,6 +177,43 @@ def get_brand_all():
         else:
             msg = "Fail access database"
     return jsonify(status=status, msg=msg, brands=brands)
+
+##############
+# BÌNH LUẬN #
+############
+
+# lấy tất cả bình luận của một sản phẩm
+# biến truyền vào là id sản phẩm, nếu không có đồng nghĩa lấy hết
+#-------------------------------------------
+@main.route("/comment/all", methods=["GET"])
+def get_comment_all():
+    status = False
+    msg = ""
+    comments = []
+    if request.method == "GET":
+        product_id = request.args.get("product_id")
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM comments WHERE (product_id = % s) OR (% s IS NULL) ORDER BY time DESC',
+            (product_id, product_id,)
+        )
+        data = cursor.fetchall()
+        if data:
+            for row in data:
+                row = Comment(row)
+                comment = {
+                    "comment_id": row.id,
+                    "customer": row.customer,
+                    "product_id": row.product,
+                    "content": row.content,
+                    "time": row.time
+                }
+                comments.append(comment)
+            status = True
+        else:
+            msg = "Access database is error or comments is empty or product_id is wrong"
+        return jsonify(status=status, msg=msg, comments=comments)
 
 ##################################
 # CÁC API CHƯA XỬ LÝ, PHÂN LOẠI #
