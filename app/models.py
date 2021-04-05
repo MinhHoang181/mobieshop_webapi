@@ -68,7 +68,7 @@ class Permission():
     ACCOUNT_MANAGER = "AccountManager"
     PRODUCT_MANAGER = "ProductManager"
     BRAND_MANAGER = "BrandManager"
-    COUPON_MANAGER = "CouponManager"
+    BILL_MANAGER = "BillManager"
 
     def __init__(self, permission):
         self.id = permission[0]

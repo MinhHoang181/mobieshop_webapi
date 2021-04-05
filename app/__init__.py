@@ -57,4 +57,8 @@ def create_app():
     from .api.manager.brand import brand as brand_blueprint
     app.register_blueprint(brand_blueprint)
 
+    # API của quản lý hoá đơn
+    from .api.manager.bill import bill as bill_blueprint
+    app.register_blueprint(bill_blueprint)
+
     return app

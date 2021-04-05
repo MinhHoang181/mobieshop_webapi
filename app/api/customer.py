@@ -351,6 +351,68 @@ def caculate_total_cart(current_user):
         status = True
     return jsonify(status=status, msg=msg, total=total)
     
+#############
+# MUA HÀNG #
+###########
+@customer.route("/buy", methods=["POST"])
+@token_required_customer
+def buy_create_bill_and_order(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        address = data["address"] if "address" in data else None
+        phone_number = data["phone_number"] if "phone_number" in data else None
+
+        current_user = Customer(current_user)
+        time_create = datetime.now()
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM carts WHERE customer_id = % s', (current_user.id,)
+        )
+        carts = cursor.fetchall()
+        if carts:
+            cursor.execute(
+                'INSERT INTO bills(customer_id, time_create) VALUE (% s, % s)', 
+                (current_user.id, time_create,)
+            )
+            bill_id = cursor.lastrowid
+            for cart in carts:
+                cursor.execute(
+                    'INSERT INTO product_bill VALUE(% s, % s, % s)',
+                    (bill_id, cart["product_id"], cart["quantity"],)
+                )
+            mysql.connection.commit()
+
+            cursor.execute(
+                'SELECT * FROM bills WHERE bill_id = % s', (bill_id,)
+            )
+            bill = cursor.fetchone()
+            bill = Bill(bill)
+            cursor.execute(
+                'UPDATE bills SET total = % s WHERE bill_id = % s', (bill.total, bill.id, )
+            )
+            mysql.connection.commit()
+            
+            time = datetime.now()
+            
+            # Tạo đơn hàng
+            if not address:
+                address = current_user.address
+            if not phone_number:
+                phone_number = current_user.phone
+            cursor.execute(
+                'INSERT INTO orders(customer_id, bill_id, `address`, phone_number, last_when_update) VALUES (% s, % s, % s, % s, % s)',
+                (current_user.id, bill_id, address, phone_number, time,)
+            )
+            mysql.connection.commit()
+            status = True
+            msg = "Order has been create"
+        else:
+            msg = "Don't have any product in cart to create bill"
+    return jsonify(status=status, msg=msg)
+
+
 
 ############
 # HOÁ ĐƠN #
@@ -382,7 +444,8 @@ def get_bill(current_user):
                     "customer": data.customer,
                     "products": data.products,
                     "fee_ship": data.fee_ship,
-                    "total": data.total
+                    "total": data.total,
+                    "time_create": data.time_create
                 }
                 status = True
             else:
@@ -410,13 +473,15 @@ def get_bill_all(current_user):
             for row in data:
                 row = Bill(row)
                 bill = {
-                    "bill_id": data.id,
-                    "customer": data.customer,
-                    "products": data.products,
-                    "fee_ship": data.fee_ship,
-                    "total": data.total
+                    "bill_id": row.id,
+                    "customer": row.customer,
+                    "products": row.products,
+                    "fee_ship": row.fee_ship,
+                    "total": row.total,
+                    "time_create": row.time_create
                 }
-                status = True
+                bills.append(bill)
+            status = True
 
     return jsonify(status=status, msg=msg, bills=bills)
 
@@ -457,17 +522,17 @@ def create_bill(current_user):
                 'UPDATE bills SET total = % s WHERE bill_id = % s', (bill.total, bill.id, )
             )
             mysql.connection.commit()
-            cursor.close()
-            status = True
-            msg = "Bill has been created"
 
             bill_detail = {
                 "bill_id": bill.id,
                 "customer": bill.customer,
                 "products": bill.products,
                 "fee_ship": bill.fee_ship,
-                "total": bill.total
+                "total": bill.total,
+                "time_create": bill.time_create
             }
+            status = True
+            msg = "Bill has been created"
         else:
             msg = "Don't have any product in cart to create bill"
     return jsonify(status=status, msg=msg, bill=bill_detail)
@@ -515,6 +580,8 @@ def create_order(current_user):
     if request.method == "POST":
         data = request.json if request.json else []
         bill_id = data["bill_id"] if "bill_id" in data else None
+        address = data["address"] if "address" in data else None
+        phone_number = data["phone_number"] if "phone_number" in data else None
         time = datetime.now()
 
         if not bill_id:
@@ -536,13 +603,17 @@ def create_order(current_user):
                     msg = "Order already exist"
                 else:
                     current_user = Customer(current_user)
+                    if not address:
+                        address = current_user.address
+                    if not phone_number:
+                        phone_number = current_user.phone
                     cursor.execute(
-                        'INSERT INTO orders(customer_id, bill_id, last_when_update) VALUES (% s, % s, % s)',
-                        (current_user.id, bill_id, time,)
+                        'INSERT INTO orders(customer_id, bill_id, address, phone_number, last_when_update) VALUES (% s, % s, % s, % s, % s)',
+                        (current_user.id, bill_id, address, phone_number, time,)
                     )
                     mysql.connection.commit()
                     status = True
-                    msg = "Order has been create"
+                    msg = "Order has been created"
             else:
                 msg = "Bill doesn't exist"
             cursor.close()

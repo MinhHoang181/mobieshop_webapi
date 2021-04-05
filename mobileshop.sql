@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 03, 2021 at 08:06 AM
+-- Generation Time: Apr 05, 2021 at 08:29 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -71,6 +71,14 @@ CREATE TABLE `bills` (
   `time_create` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `bills`
+--
+
+INSERT INTO `bills` (`bill_id`, `customer_id`, `fee_ship`, `total`, `time_create`) VALUES
+(6, 1, 0, 9200, '2021-04-03 15:17:53'),
+(7, 1, 0, 9200, '2021-04-03 15:23:48');
+
 -- --------------------------------------------------------
 
 --
@@ -132,7 +140,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`customer_id`, `product_id`, `quantity`) VALUES
-(1, 1, 2),
+(1, 1, 4),
 (1, 2, 2);
 
 -- --------------------------------------------------------
@@ -180,6 +188,8 @@ INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_passw
 CREATE TABLE `orders` (
   `customer_id` int(11) NOT NULL,
   `bill_id` int(11) NOT NULL,
+  `address` varchar(1000) NOT NULL,
+  `phone_number` varchar(20) NOT NULL,
   `status` tinyint(1) NOT NULL DEFAULT '0',
   `last_who_update` int(11) DEFAULT NULL,
   `last_when_update` datetime NOT NULL
@@ -270,8 +280,8 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumbnail`, `product_description`, `product_default_price`, `product_sale_price`, `time_warranty`, `product_last_update_who`, `product_last_update_when`) VALUES
-(1, 'IPhone Xsmas', 1, 'New IPhone 2019', 'This is IPhone for description', 1300, 1200, 0, 1, '2021-03-17 00:00:00'),
-(2, 'IPhone 12 Pro Max', 1, 'New IPhone 2020', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-03-17 00:00:00'),
+(1, 'IPhone Xsmas', 1, 'no_image.png', 'This is IPhone for description', 1300, 1200, 0, 1, '2021-04-05 15:06:56'),
+(2, 'IPhone 12 Pro Max', 1, 'no_image.png', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-04-05 15:07:25'),
 (3, 'test1', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:11'),
 (4, 'test2', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:15'),
 (5, 'test3', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:18'),
@@ -284,7 +294,10 @@ INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumb
 (12, 'test10', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:41'),
 (13, 'test11', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:44'),
 (14, 'test12', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:47'),
-(15, 'test13', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:51');
+(15, 'test13', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:51'),
+(16, 'test13', NULL, 'no_image.png', NULL, 0, 0, 0, 1, '2021-04-05 14:16:57'),
+(17, 'test image', NULL, 'no_image.png', NULL, 0, 0, 0, 1, '2021-04-05 14:24:02'),
+(18, 'test image', NULL, 'test_product.png', NULL, 0, 0, 0, 1, '2021-04-05 14:25:04');
 
 -- --------------------------------------------------------
 
@@ -297,6 +310,16 @@ CREATE TABLE `product_bill` (
   `product_id` int(11) NOT NULL,
   `quantity` int(11) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `product_bill`
+--
+
+INSERT INTO `product_bill` (`bill_id`, `product_id`, `quantity`) VALUES
+(6, 1, 4),
+(6, 2, 2),
+(7, 1, 4),
+(7, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -494,7 +517,7 @@ ALTER TABLE `admins_account`
 -- AUTO_INCREMENT for table `bills`
 --
 ALTER TABLE `bills`
-  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `brands`
@@ -530,7 +553,7 @@ ALTER TABLE `permission_role`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `product_image`
