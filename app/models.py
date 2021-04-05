@@ -1,4 +1,5 @@
 from app import mysql
+from app.tools import get_base64_image
 import MySQLdb.cursors
 
 # Khách hàng
@@ -89,7 +90,7 @@ class Product():
     def __init__(self, product):
         self.id = product["product_id"] if product else None
         self.name = product["product_name"] if product else None
-        self.thumbnail = product["product_thumbnail"] if product else None
+        self.thumbnail = Image(product["product_thumbnail"]) if product else None
         self.description = product["product_description"] if product else None
         self.default_price = product["product_default_price"] if product else None
         self.sale_price = product["product_sale_price"] if product else None
@@ -107,6 +108,13 @@ class Product():
             'SELECT * FROM admins_account WHERE admin_id = % s', (product["product_last_update_who"], )
         )
         self.last_update_who = Admin(cursor.fetchone())
+
+class Image():
+    def __init__(self, image_name):
+        self.name = image_name
+
+        image_base64 = get_base64_image(image_name)
+        self.base64 = image_base64 if image_base64 else None
 
 # nhãn hiệu
 class Brand():

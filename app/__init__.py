@@ -1,9 +1,17 @@
 from flask import Flask
 from flask_mysqldb import MySQL
 from flask_cors import CORS
+import os
 
 mysql = MySQL()
 cors = CORS()
+
+PROJECT_HOME = os.path.dirname(os.path.realpath(__file__))
+UPLOAD_FOLDER = '{}/uploads/'.format(PROJECT_HOME)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+SIZE_THUMNAIL = (256, 256)
+NO_IMAGE = "no_image.png"
 
 def create_app():
     app = Flask(__name__)
@@ -15,6 +23,8 @@ def create_app():
     app.config['MYSQL_USER'] = 'root'
     app.config['MYSQL_PASSWORD'] = ''
     app.config['MYSQL_DB'] = 'mobileshop'
+
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
     mysql.init_app(app)
     cors.init_app(app)

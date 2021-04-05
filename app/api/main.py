@@ -47,7 +47,10 @@ def get_product():
                         "brand_id": data.brand.id,
                         "brand_name": data.brand.name
                     },
-                    "product_thumbnail": data.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": data.thumbnail.name,
+                        "image_base64": data.thumbnail.base64
+                    },
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
@@ -98,7 +101,10 @@ def get_product_all():
                         "brand_id": row.brand.id,
                         "brand_name": row.brand.name
                     },
-                    "product_thumbnail": row.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": row.thumbnail.name,
+                        "image_base64": row.thumbnail.base64
+                    },
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
@@ -175,6 +181,32 @@ def get_brand_all():
 ##################################
 # CÁC API CHƯA XỬ LÝ, PHÂN LOẠI #
 ################################
+
+from app.tools import allowed_file, upload_image
+
+@main.route("/upload", methods=["POST"])
+def upload():
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        img_b64 = data["image_base64"] if "image_base64" in data else None
+        img_name = data["image_name"] if "image_name" in data else None
+        
+        if not img_b64 or img_b64 == "":
+            msg = "Image base64 is missing"
+        elif not img_name or img_name == "":
+            msg = "Image name is missing"
+        elif not allowed_file(img_name):
+            msg = "Image format is not allow"
+        else:
+            upload = upload_image(img_name, img_b64)
+            if upload:
+                status = True
+                msg = "Image has been uploaded"
+            else:
+                msg = "Image upload fail"
+    return jsonify(status=status, msg=msg)
 
 # Manage Order
 @main.route("/addorder", methods=["POST", "GET"])
