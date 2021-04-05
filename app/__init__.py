@@ -61,4 +61,8 @@ def create_app():
     from .api.manager.bill import bill as bill_blueprint
     app.register_blueprint(bill_blueprint)
 
+    # API của quản lý đơn hàng
+    from .api.manager.order import order as order_blueprint
+    app.register_blueprint(order_blueprint)
+
     return app

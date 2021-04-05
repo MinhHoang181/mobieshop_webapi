@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 05, 2021 at 08:29 AM
+-- Generation Time: Apr 05, 2021 at 10:51 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -77,7 +77,8 @@ CREATE TABLE `bills` (
 
 INSERT INTO `bills` (`bill_id`, `customer_id`, `fee_ship`, `total`, `time_create`) VALUES
 (6, 1, 0, 9200, '2021-04-03 15:17:53'),
-(7, 1, 0, 9200, '2021-04-03 15:23:48');
+(7, 1, 0, 9200, '2021-04-03 15:23:48'),
+(13, 1, 0, 9200, '2021-04-05 16:12:10');
 
 -- --------------------------------------------------------
 
@@ -195,6 +196,13 @@ CREATE TABLE `orders` (
   `last_when_update` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`customer_id`, `bill_id`, `address`, `phone_number`, `status`, `last_who_update`, `last_when_update`) VALUES
+(1, 13, '1/1 Nguyễn Hữu Thọ', '0123456789', 1, 1, '2021-04-05 17:48:16');
+
 -- --------------------------------------------------------
 
 --
@@ -216,7 +224,8 @@ INSERT INTO `permissions` (`permission_id`, `permission_name`, `permission_detai
 (2, 'AccountManager', 'Quản lý tài khoản'),
 (3, 'ProductManager', 'Quản lý sản phẩm'),
 (4, 'BrandManager', 'Quản lý nhãn hiệu'),
-(5, 'CouponManager', 'Quản lý phiếu mua hàng');
+(5, 'BillManager', 'Quản lý hoá đơn'),
+(6, 'OrderManager', 'Quản lý đơn hàng');
 
 -- --------------------------------------------------------
 
@@ -251,10 +260,12 @@ INSERT INTO `permission_role` (`perm_role_id`, `role_name`, `permission_name`, `
 (14, 'admin', 'BrandManager', 'create'),
 (15, 'admin', 'BrandManager', 'edit'),
 (16, 'admin', 'BrandManager', 'delete'),
-(17, 'admin', 'CouponManager', 'read'),
-(18, 'admin', 'CouponManager', 'create'),
-(19, 'admin', 'CouponManager', 'edit'),
-(20, 'admin', 'CouponManager', 'delete');
+(17, 'admin', 'BillManager', 'read'),
+(18, 'admin', 'BillManager', 'create'),
+(19, 'admin', 'BillManager', 'edit'),
+(20, 'admin', 'BillManager', 'delete'),
+(21, 'admin', 'OrderManager', 'read'),
+(22, 'admin', 'OrderManager', 'edit');
 
 -- --------------------------------------------------------
 
@@ -319,7 +330,9 @@ INSERT INTO `product_bill` (`bill_id`, `product_id`, `quantity`) VALUES
 (6, 1, 4),
 (6, 2, 2),
 (7, 1, 4),
-(7, 2, 2);
+(7, 2, 2),
+(13, 1, 4),
+(13, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -517,7 +530,7 @@ ALTER TABLE `admins_account`
 -- AUTO_INCREMENT for table `bills`
 --
 ALTER TABLE `bills`
-  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `brands`
@@ -541,13 +554,13 @@ ALTER TABLE `customers_account`
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `permission_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `permission_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `permission_role`
 --
 ALTER TABLE `permission_role`
-  MODIFY `perm_role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `perm_role_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `products`

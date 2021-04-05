@@ -561,6 +561,8 @@ def get_order_all(current_user):
                 order = {
                     "bill_id": row.bill,
                     "customer": row.customer,
+                    "address": row.address,
+                    "phone": row.phone,
                     "status": row.status,
                 }
                 orders.append(order)

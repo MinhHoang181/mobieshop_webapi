@@ -69,6 +69,7 @@ class Permission():
     PRODUCT_MANAGER = "ProductManager"
     BRAND_MANAGER = "BrandManager"
     BILL_MANAGER = "BillManager"
+    ORDER_MANAGER = "OrderManager"
 
     def __init__(self, permission):
         self.id = permission[0]
@@ -186,6 +187,8 @@ class Bill():
 class Order():
     def __init__(self, order):
         self.bill = order["bill_id"]
+        self.address = order["address"]
+        self.phone = order["phone_number"]
         self.status = order["status"]
         self.last_update = order["last_when_update"]
 
