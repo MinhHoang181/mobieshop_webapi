@@ -3,6 +3,7 @@ from app.models import Brand, Comment, Product
 import MySQLdb.cursors
 from datetime import datetime
 from app import mysql
+import math
 
 main = Blueprint("main", __name__)
 
@@ -62,7 +63,8 @@ def get_product():
     return jsonify(status=status, msg=msg, product=product)
 
 # Lấy thông tin của tất cả sản phẩm
-#----------------------------------------------------
+# - biến truyền vào có thể là page, low_price, high_price, brand
+#-------------------------------------------
 @main.route("/product/all", methods=['GET'])
 def get_product_all():
     status = False
@@ -70,21 +72,16 @@ def get_product_all():
     products = []
 
     if request.method == 'GET':
+        product_name = request.args.get("product_name")
         page = request.args.get("page", type=int)
         low_price = request.args.get("low_price", type=int)
         high_price = request.args.get("high_price", type=int)
         brand_id = request.args.get("brand_id")
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        if not brand_id:
-            cursor.execute(
-                'SELECT * FROM products WHERE (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL)',
-                (low_price, low_price, high_price, high_price, ))
-            
-        else:
-            cursor.execute(
-                'SELECT * FROM products WHERE brand_id = % s', 
-                (brand_id, ))
+        cursor.execute(
+            'SELECT * FROM products WHERE (brand_id = % s OR % s IS NULL) AND (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL) AND (product_name like % s OR % s IS NULL)',
+            (brand_id, brand_id, low_price, low_price, high_price, high_price, str(product_name) + "%", product_name,))
         data = cursor.fetchall()
         cursor.close()
         if data:
@@ -115,6 +112,32 @@ def get_product_all():
         else:
             msg = "Fail access database"
     return jsonify(status=status, msg=msg, products=products)
+
+# lấy tổng số trang
+#---------------------
+@main.route("/product/all/count", methods=["GET"])
+def count_page():
+    status = False
+    msg = ""
+    num_page = 0
+    if request.method == "GET":
+        product_name = request.args.get("product_name")
+        low_price = request.args.get("low_price", type=int)
+        high_price = request.args.get("high_price", type=int)
+        brand_id = request.args.get("brand_id")
+
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'SELECT COUNT(*) FROM products WHERE (brand_id = % s OR % s IS NULL) AND (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL) AND (product_name like % s OR % s IS NULL)',
+            (brand_id, brand_id, low_price, low_price, high_price, high_price, str(product_name) + "%", product_name, )
+        )
+        count = cursor.fetchone()
+        count = int(count[0])
+        if count != 0:
+            num_page = math.ceil(count / Product.NUM_PER_PAGE)
+        status = True
+        
+    return jsonify(status=status, msg=msg, num_page=num_page, num_product=count)
 
 ##############
 # NHÃN HIỆU #
