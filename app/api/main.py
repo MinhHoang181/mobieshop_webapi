@@ -1,8 +1,9 @@
 from flask import request, jsonify, Blueprint
-from app.models import Brand, Product
+from app.models import Brand, Comment, Product
 import MySQLdb.cursors
 from datetime import datetime
 from app import mysql
+import math
 
 main = Blueprint("main", __name__)
 
@@ -47,7 +48,10 @@ def get_product():
                         "brand_id": data.brand.id,
                         "brand_name": data.brand.name
                     },
-                    "product_thumbnail": data.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": data.thumbnail.name,
+                        "image_base64": data.thumbnail.base64
+                    },
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
@@ -59,7 +63,8 @@ def get_product():
     return jsonify(status=status, msg=msg, product=product)
 
 # Lấy thông tin của tất cả sản phẩm
-#----------------------------------------------------
+# - biến truyền vào có thể là page, low_price, high_price, brand
+#-------------------------------------------
 @main.route("/product/all", methods=['GET'])
 def get_product_all():
     status = False
@@ -67,21 +72,16 @@ def get_product_all():
     products = []
 
     if request.method == 'GET':
+        product_name = request.args.get("product_name")
         page = request.args.get("page", type=int)
         low_price = request.args.get("low_price", type=int)
         high_price = request.args.get("high_price", type=int)
         brand_id = request.args.get("brand_id")
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        if not brand_id:
-            cursor.execute(
-                'SELECT * FROM products WHERE (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL)',
-                (low_price, low_price, high_price, high_price, ))
-            
-        else:
-            cursor.execute(
-                'SELECT * FROM products WHERE brand_id = % s', 
-                (brand_id, ))
+        cursor.execute(
+            'SELECT * FROM products WHERE (brand_id = % s OR % s IS NULL) AND (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL) AND (product_name like % s OR % s IS NULL)',
+            (brand_id, brand_id, low_price, low_price, high_price, high_price, str(product_name) + "%", product_name,))
         data = cursor.fetchall()
         cursor.close()
         if data:
@@ -98,7 +98,10 @@ def get_product_all():
                         "brand_id": row.brand.id,
                         "brand_name": row.brand.name
                     },
-                    "product_thumbnail": row.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": row.thumbnail.name,
+                        "image_base64": row.thumbnail.base64
+                    },
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
@@ -109,6 +112,32 @@ def get_product_all():
         else:
             msg = "Fail access database"
     return jsonify(status=status, msg=msg, products=products)
+
+# lấy tổng số trang
+#---------------------
+@main.route("/product/all/count", methods=["GET"])
+def count_page():
+    status = False
+    msg = ""
+    num_page = 0
+    if request.method == "GET":
+        product_name = request.args.get("product_name")
+        low_price = request.args.get("low_price", type=int)
+        high_price = request.args.get("high_price", type=int)
+        brand_id = request.args.get("brand_id")
+
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'SELECT COUNT(*) FROM products WHERE (brand_id = % s OR % s IS NULL) AND (product_sale_price >= % s OR  % s IS NULL) AND (product_sale_price <= % s OR % s IS NULL) AND (product_name like % s OR % s IS NULL)',
+            (brand_id, brand_id, low_price, low_price, high_price, high_price, str(product_name) + "%", product_name, )
+        )
+        count = cursor.fetchone()
+        count = int(count[0])
+        if count != 0:
+            num_page = math.ceil(count / Product.NUM_PER_PAGE)
+        status = True
+        
+    return jsonify(status=status, msg=msg, num_page=num_page, num_product=count)
 
 ##############
 # NHÃN HIỆU #
@@ -172,445 +201,72 @@ def get_brand_all():
             msg = "Fail access database"
     return jsonify(status=status, msg=msg, brands=brands)
 
+##############
+# BÌNH LUẬN #
+############
+
+# lấy tất cả bình luận của một sản phẩm
+# biến truyền vào là id sản phẩm, nếu không có đồng nghĩa lấy hết
+#-------------------------------------------
+@main.route("/comment/all", methods=["GET"])
+def get_comment_all():
+    status = False
+    msg = ""
+    comments = []
+    if request.method == "GET":
+        product_id = request.args.get("product_id")
+
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM comments WHERE (product_id = % s) OR (% s IS NULL) ORDER BY time DESC',
+            (product_id, product_id,)
+        )
+        data = cursor.fetchall()
+        if data:
+            for row in data:
+                row = Comment(row)
+                comment = {
+                    "comment_id": row.id,
+                    "customer": row.customer,
+                    "product_id": row.product,
+                    "content": row.content,
+                    "time": row.time
+                }
+                comments.append(comment)
+            status = True
+        else:
+            msg = "Access database is error or comments is empty or product_id is wrong"
+        return jsonify(status=status, msg=msg, comments=comments)
+
 ##################################
 # CÁC API CHƯA XỬ LÝ, PHÂN LOẠI #
 ################################
 
-# Manage Order
-@main.route("/addorder", methods=["POST", "GET"])
-def addorder():
+from app.tools import allowed_file, upload_image
+
+@main.route("/upload", methods=["POST"])
+def upload():
     status = False
     msg = ""
     if request.method == "POST":
-
-        data = request.json
-        customer_id = data["customer_id"]
-        order_date = datetime.now()
-        order_sub_total_price = data["order_sub_total_price"]
-        order_shipping = data["order_shipping"]
-        coupon_code = data["coupon_code"]
-        order_total_price = data["order_total_price"]
-        order_status = data["order_status"]
-        order_last_update_who = data["order_last_update_who"]
-        order_last_update_when = datetime.now()
-
-        if order_sub_total_price == "" or order_shipping == "" or order_total_price == "":
-            msg = "Please fill out the form !"
+        data = request.json if request.json else []
+        img_b64 = data["image_base64"] if "image_base64" in data else None
+        img_name = data["image_name"] if "image_name" in data else None
+        
+        if not img_b64 or img_b64 == "":
+            msg = "Image base64 is missing"
+        elif not img_name or img_name == "":
+            msg = "Image name is missing"
+        elif not allowed_file(img_name):
+            msg = "Image format is not allow"
         else:
-            # ket noi database
-            cursor = mysql.connection.cursor()
-            cursor.execute(
-                'INSERT INTO orders VALUES (NULL, % s, % s, % s, % s, % s, % s, % s, % s,% s)', (
-                    customer_id, order_date, order_sub_total_price, order_shipping, coupon_code, order_total_price, order_status, order_last_update_who, order_last_update_when,)
-            )
-            mysql.connection.commit()
-            cursor.close()
-
-            status = True
-            msg = "You have successfully added !"
-    return jsonify(status=status, msg=msg)
-
-
-@main.route("/getallorder", methods=['GET'])
-def getallorder():
-    status = False
-    msg = ""
-
-    if request.method == 'GET':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM orders')
-        data = cursor.fetchall()
-        cursor.close()
-
-        status = True
-        msg = "Get all orders!"
-    return jsonify(status=status, msg=msg, data=data)
-
-
-@main.route("/editorder", methods=['GET', 'POST'])
-def editorder():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        order_id = data["order_id"]
-        customer_id = data["customer_id"]
-        order_date = datetime.now()
-        order_sub_total_price = data["order_sub_total_price"]
-        order_shipping = data["order_shipping"]
-        coupon_code = data["coupon_code"]
-        order_total_price = data["order_total_price"]
-        order_status = data["order_status"]
-        order_last_update_who = data["order_last_update_who"]
-        order_last_update_when = datetime.now()
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM orders WHERE order_id = % s', (order_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'UPDATE `orders` SET `customer_id` = % s, `order_date` = % s, `order_sub_total_price` = % s, `order_shipping` = % s, `coupon_code` = % s, `order_total_price` = % s, `order_status` = % s, `order_last_update_who` = % s, `order_last_update_when` = % s WHERE `orders`.`order_id` = % s', (
-                    customer_id, order_date, order_sub_total_price, order_shipping, coupon_code, order_total_price, order_status, order_last_update_who, order_last_update_when, order_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Orders info has been updated!"
-        elif order_sub_total_price == "" or order_shipping == "" or order_total_price == "":
-            msg = "Please fill out the form !"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-
-@main.route("/deleteorder", methods=['GET', 'POST'])
-def deleteorder():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        order_id = data["order_id"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM orders WHERE order_id = % s', (order_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'DELETE FROM `orders` WHERE `orders`.`order_id` = % s', (
-                    order_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Order info has been deleted!"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-# Product warranty
-@main.route("/addwarranty", methods=["POST", "GET"])
-def addwarranty():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-        data = request.json
-
-        customer_id = data["customer_id"]
-        product_name = data["product_name"]
-        seri_number = data["seri_number"]
-        description = data["description"]
-        status_ = data["status"]
-        date = datetime.now()
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM warranty WHERE seri_number = % s', (seri_number, ))
-        item = cursor.fetchone()
-
-        if item:
-            msg = "Your warranty already exist!"
-        elif product_name == "" or seri_number == "":
-            msg = "Please fill out the form!"
-        else:
-            cursor.execute(
-                'INSERT INTO warranty VALUES (NULL, % s, % s, % s, % s, % s, % s)', (customer_id, product_name, seri_number, description, status_, date, ))
-            mysql.connection.commit()
-            cursor.close()
-
-            status = True
-            msg = "You have successfully added !"
-        return jsonify(status=status, msg=msg)
-
-
-@main.route("/getallwarranty", methods=['GET'])
-def getallwarranty():
-    status = False
-    msg = ""
-
-    if request.method == 'GET':
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM warranty')
-        data = cursor.fetchall()
-        cursor.close()
-
-        status = True
-        msg = "Get all warranty!"
-    return jsonify(status=status, msg=msg, data=data)
-
-
-@main.route("/editwarranty", methods=['GET', 'POST'])
-def editwarranty():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        warranty_id = data["warranty_id"]
-        customer_id = data["customer_id"]
-        product_name = data["product_name"]
-        seri_number = data["seri_number"]
-        description = data["description"]
-        status_ = data["status"]
-        date = datetime.now()
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM warranty WHERE warranty_id = % s', (warranty_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'UPDATE `warranty` SET `product_name` = % s, `seri_number` = % s, `description` = % s, `status` = % s, `date` = % s WHERE `warranty`.`warranty_id` = % s', (
-                    product_name, seri_number, description, status_, date, warranty_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Warranty info has been updated!"
-        elif product_name == "" or seri_number == "" or description == "" or status_ == "":
-            msg = "Please fill out the form !"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-
-@main.route("/deletewarranty", methods=['GET', 'POST'])
-def deletewarranty():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        warranty_id = data["warranty_id"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM warranty WHERE warranty_id = % s', (warranty_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'DELETE FROM `warranty` WHERE `warranty`.`warranty_id` = % s', (
-                    warranty_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Warranty info has been deleted!"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-# Manage Carts
-@main.route("/addcart", methods=['GET', 'POST'])
-def addcart():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-        data = request.json
-
-        order_id = ""
-        customer_id = data["customer_id"]
-        product_id = data["product_id"]
-        quantity = data["quantity"]
-        date = datetime.now()
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'INSERT INTO carts VALUES (NULL, % s, % s, % s, % s)', (customer_id, product_id, quantity, date,))
-        mysql.connection.commit()
-        cursor.close()
-
-        status = True
-        msg = "You have successfully added !"
-        return jsonify(status=status, msg=msg)
-
-
-@main.route("/getallcart", methods=['GET'])
-def getallcart():
-    status = False
-    msg = ""
-
-    if request.method == 'GET':
-        data = request.json
-
-        customer_id = data["customer_id"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM carts WHERE customer_id = % s', (customer_id,))
-        data = cursor.fetchall()
-        cursor.close()
-
-        status = True
-        msg = "Get all carts!"
-    return jsonify(status=status, msg=msg, data=data)
-
-
-@main.route("/editcart", methods=['GET', 'POST'])
-def editcart():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        cart_id = data["cart_id"]
-        quantity = data["quantity"]
-        date = datetime.now()
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM carts WHERE cart_id = % s', (cart_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'UPDATE `carts` SET `quantity` = % s, `date_time` = % s WHERE `carts`.`cart_id` = % s', (
-                    quantity, date, cart_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Cart info has been updated!"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-
-@main.route("/deletecart", methods=['GET', 'POST'])
-def deletecart():
-    status = False
-    msg = ""
-
-    if request.method == "POST":
-
-        data = request.json
-        cart_id = data["cart_id"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM carts WHERE cart_id = % s', (cart_id, ))
-        account = cursor.fetchone()
-        if account:
-            cursor.execute(
-                'DELETE FROM `carts` WHERE `carts`.`cart_id` = % s', (
-                    cart_id,)
-            )
-            mysql.connection.commit()
-
-            status = True
-            msg = "Cart info has been deleted!"
-        else:
-            msg = "Fail to update info!"
-
-    return jsonify(status=status, msg=msg)
-
-# Count Price via Cart
-@main.route("/getprice", methods=['GET', 'POST'])
-def getprice():
-    status = False
-    msg = ""
-    total = 0
-
-    if request.method == "GET":
-
-        data = request.json
-        cart_id = data["cart_id"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM carts WHERE cart_id = % s', (cart_id, ))
-        item = cursor.fetchone()
-        if item:
-
-            product_id = item["product_id"]
-            cursor.execute(
-                'SELECT quantity FROM `carts` WHERE `carts`.`cart_id` = % s', (
-                    cart_id,)
-            )
-            cart = cursor.fetchone()
-            quantity = cart["quantity"]
-
-            cursor.execute(
-                'SELECT product_sale_price FROM `products` WHERE `products`.`product_id` = % s', (
-                    product_id,)
-            )
-            product = cursor.fetchone()
-            price = product["product_sale_price"]
-            cursor.close()
-
-        total = price * quantity
-
-        status = True
-        msg = "Get Total Price has been done!"
-    else:
-        msg = "Fail to get price of quantity product"
-    return jsonify(status=status, msg=msg, total=total)
-
-# Count Total price
-@main.route("/gettotalprice", methods=['GET', 'POST'])
-def gettotalprice():
-    status = False
-    msg = ""
-    total = 0
-
-    if request.method == "GET":
-
-        data = request.json
-        customer_id = data["customer_id"]
-        coupon_code = data["coupon_code"]
-
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM carts WHERE customer_id = % s', (customer_id, ))
-        item = cursor.fetchall()
-        if item:
-
-            for i in range(len(item)):
-                product_id = item[i]['product_id']
-                quantity = item[i]['quantity']
-
-                cursor.execute(
-                    'SELECT product_sale_price FROM `products` WHERE `products`.`product_id` = % s', (
-                        product_id,)
-                )
-                product = cursor.fetchone()
-                price = product["product_sale_price"]
-
-                total += price * quantity
-
-            status = True
-            msg = "Get Total Price has been done!"
-
-            if coupon_code != "":
-                cursor.execute(
-                    'SELECT coupon_discount FROM `coupon` WHERE `coupon`.`coupon_code` = % s', (
-                        coupon_code,)
-                )
-                coupon = cursor.fetchone()
-                if coupon:
-                    coupon_discount = coupon['coupon_discount']
-                    total_dis = total - total*coupon_discount/100
-
-        else:
-            msg = "Fail to get total of order"
-    return jsonify(status=status, msg=msg, total=total, total_dis=total_dis)
-
+            upload = upload_image(img_name, img_b64)
+            if upload:
+                status = True
+                msg = "Image has been uploaded"
+            else:
+                msg = "Image upload fail"
+    return jsonify(status=status, msg=msg)     
 
 # Search Product by Name
 @main.route("/searchproduct", methods=['GET', 'POST'])

@@ -1,8 +1,8 @@
 from app.models import Permission
 from flask import Blueprint, request, jsonify
-from app import mysql
+from app import NO_IMAGE, SIZE_THUMNAIL, mysql
 import MySQLdb.cursors
-from app.tools import token_required_admin, permission_required
+from app.tools import token_required_admin, permission_required, allowed_file, upload_image
 from app.models import Permission, Action, Product, Admin
 from datetime import datetime
 
@@ -31,7 +31,7 @@ def get_product(current_user):
         else:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute(
-                'SELECT * FROM products')
+                'SELECT * FROM products WHERE product_id = % s', (prodcut_id,))
             data = cursor.fetchone()
             cursor.close()
             if data:
@@ -43,7 +43,10 @@ def get_product(current_user):
                         "brand_id": data.brand.id,
                         "brand_name": data.brand.name
                     },
-                    "product_thumbnail": data.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": data.thumbnail.name,
+                        "image_base64": data.thumbnail.base64
+                    },
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
@@ -101,7 +104,10 @@ def get_product_all(current_user):
                         "brand_id": row.brand.id,
                         "brand_name": row.brand.name
                     },
-                    "product_thumbnail": row.thumbnail,
+                    "product_thumbnail": {
+                        "image_name": row.thumbnail.name,
+                        "image_base64": row.thumbnail.base64
+                    },
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
@@ -131,16 +137,47 @@ def add_product(current_user):
 
         product_name = data["product_name"] if "product_name" in data else None
         brand_id = data["brand_id"] if "brand_id" in data else None
-        product_thumbnail = data["product_thumbnail"] if "producct_thumbnail" in data else None
+        product_thumbnail = data["product_thumbnail"] if "product_thumbnail" in data else None
         product_description = data["product_description"] if "product_description" in data else None
-        product_default_price = data["product_default_price"] if "product_default_price" in data else None
-        product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
+        product_default_price = data["product_default_price"] if "product_default_price" in data else 0
+        product_sale_price = data["product_sale_price"] if "product_sale_price" in data else 0
         time_warranty = data["time_warranty"] if "time_warranty" in data else 0
         product_last_update_when = datetime.now()
 
         if not product_name:
             msg = "Product name is missing"
         else:
+            # kiểm tra xem có ảnh không
+            # nếu có
+            if product_thumbnail:
+                # lấy 2 biến name và base64
+                image_name = product_thumbnail["image_name"] if "image_name" in product_thumbnail else None
+                image_base64 = product_thumbnail["image_base64"] if "image_base64" in product_thumbnail else None
+                # nếu không có 2 biến này hoặc rỗng thì báo lỗi
+                if not image_base64 or image_base64 == "":
+                    msg = "Image base64 is missing"
+                    return jsonify(status=status, msg=msg)
+                elif not image_name or image_name == "":
+                    msg = "Image name is missing"
+                    return jsonify(status=status, msg=msg)
+                # nếu định dạng ảnh không cho phép báo lỗi
+                elif not allowed_file(image_name):
+                    msg = "Image format is not allow"
+                    return jsonify(status=status, msg=msg)
+                # nếu thoả hết thì upload ảnh lên server
+                else:
+                    # upload lấy dạng ảnh đại diện 256x256 (TTHUMBNAIL)
+                    upload = upload_image(image_name, image_base64, size=SIZE_THUMNAIL)
+                    # nếu không upload thành công thì báo lỗi
+                    if not upload:
+                        msg = "Image upload fail"
+                        return jsonify(status=status, msg=msg)
+                    # upload thành công lấy file name lưu lên SQL
+                    product_thumbnail = image_name
+            else:
+                # nếu không có ảnh thì cho ảnh mặc định
+                product_thumbnail = NO_IMAGE
+
             # lấy danh tính admin đang request
             current_user = Admin(current_user)
 
@@ -172,7 +209,7 @@ def edit_product(current_user):
         product_id = data["product_id"] if "product_id" in data else None
         product_name = data["product_name"] if "product_name" in data else None
         brand_id = data["brand_id"] if "brand_id" in data else None
-        product_thumbnail = data["product_thumbnail"] if "producct_thumbnail" in data else None
+        product_thumbnail = data["product_thumbnail"] if "product_thumbnail" in data else None
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else None
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
@@ -195,13 +232,42 @@ def edit_product(current_user):
                 current_user = Admin(current_user)
                 # chuyển sang dạng object cho dễ sài
                 product = Product(product)
+                
+                # kiểm tra xem có ảnh không
+                # nếu có
+                if product_thumbnail:
+                    # lấy 2 biến name và base64
+                    image_name = product_thumbnail["image_name"] if "image_name" in product_thumbnail else None
+                    image_base64 = product_thumbnail["image_base64"] if "image_base64" in product_thumbnail else None
+                    # nếu không có 2 biến này hoặc rỗng thì báo lỗi
+                    if not image_base64 or image_base64 == "":
+                        msg = "Image base64 is missing"
+                        return jsonify(status=status, msg=msg)
+                    elif not image_name or image_name == "":
+                        msg = "Image name is missing"
+                        return jsonify(status=status, msg=msg)
+                    # nếu định dạng ảnh không cho phép báo lỗi
+                    elif not allowed_file(image_name):
+                        msg = "Image format is not allow"
+                        return jsonify(status=status, msg=msg)
+                    # nếu thoả hết thì upload ảnh lên server
+                    else:
+                        # upload lấy dạng ảnh đại diện 256x256 (TTHUMBNAIL)
+                        upload = upload_image(image_name, image_base64, size=SIZE_THUMNAIL)
+                        # nếu không upload thành công thì báo lỗi
+                        if not upload:
+                            msg = "Image upload fail"
+                            return jsonify(status=status, msg=msg)
+                        # upload thành công lấy file name lưu lên SQL
+                        product_thumbnail = image_name
+
                 # nếu không có biến nào thì lấy giá trị cũ biến đó
                 if not product_name:
                     product_name = product.name
                 if not brand_id:
                     brand_id = product.brand.id
                 if not product_thumbnail:
-                    product_thumbnail = product.thumbnail
+                    product_thumbnail = product.thumbnail.name
                 if not product_description:
                     product_description = product.description
                 if not product_default_price:
