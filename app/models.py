@@ -11,6 +11,7 @@ class Customer():
         self.email = current_user["customer_email"] if current_user else None
         self.address = current_user["customer_address"] if current_user else None
         self.phone = current_user["customer_phone"] if current_user else None
+        self.confirmed = current_user["confirmed"] if current_user else None
 
 # Quản trị viên
 class Admin():

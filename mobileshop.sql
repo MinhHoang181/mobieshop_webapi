@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Apr 05, 2021 at 10:51 AM
+-- Generation Time: Apr 06, 2021 at 07:36 AM
 -- Server version: 5.7.32
 -- PHP Version: 7.4.12
 
@@ -141,7 +141,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`customer_id`, `product_id`, `quantity`) VALUES
-(1, 1, 4),
+(1, 1, 6),
 (1, 2, 2);
 
 -- --------------------------------------------------------
@@ -158,6 +158,14 @@ CREATE TABLE `comments` (
   `time` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+--
+-- Dumping data for table `comments`
+--
+
+INSERT INTO `comments` (`comment_id`, `customer_id`, `product_id`, `content`, `time`) VALUES
+(1, 1, 1, 'test comment', '2021-04-05 20:17:54'),
+(2, 1, 1, 'test comment 2', '2021-04-05 20:35:56');
+
 -- --------------------------------------------------------
 
 --
@@ -166,19 +174,20 @@ CREATE TABLE `comments` (
 
 CREATE TABLE `customers_account` (
   `customer_id` int(11) NOT NULL,
-  `customer_name` varchar(100) NOT NULL,
+  `customer_name` varchar(100) DEFAULT NULL,
   `customer_password` varchar(100) NOT NULL,
   `customer_email` varchar(100) NOT NULL,
   `customer_address` varchar(100) DEFAULT NULL,
-  `customer_phone` varchar(100) DEFAULT NULL
+  `customer_phone` varchar(100) DEFAULT NULL,
+  `confirmed` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
 -- Dumping data for table `customers_account`
 --
 
-INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_email`, `customer_address`, `customer_phone`) VALUES
-(1, 'customer', 'pbkdf2:sha256:150000$QheNYrFB$65dbd315da08b1cc81ff4c6f9f16510c83b0cb80234a3f705c9538b6afe89764', '', '1/1 Nguyễn Hữu Thọ', '');
+INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_email`, `customer_address`, `customer_phone`, `confirmed`) VALUES
+(1, 'customer', 'pbkdf2:sha256:150000$QheNYrFB$65dbd315da08b1cc81ff4c6f9f16510c83b0cb80234a3f705c9538b6afe89764', 'customer@gmail.com', '1/1 Nguyễn Hữu Thọ', '0123456789', 1);
 
 -- --------------------------------------------------------
 
@@ -445,8 +454,8 @@ ALTER TABLE `comments`
 --
 ALTER TABLE `customers_account`
   ADD PRIMARY KEY (`customer_id`),
-  ADD UNIQUE KEY `customer_name` (`customer_name`),
-  ADD UNIQUE KEY `customer_email` (`customer_email`);
+  ADD UNIQUE KEY `customer_email` (`customer_email`),
+  ADD UNIQUE KEY `customer_phone` (`customer_phone`);
 
 --
 -- Indexes for table `orders`
@@ -542,7 +551,7 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `customers_account`
