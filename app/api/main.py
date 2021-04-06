@@ -29,14 +29,14 @@ def get_product():
     product = {}
 
     if request.method == 'GET':
-        prodcut_id = request.args["product_id"] if "product_id" in request.args else None
+        product_id = request.args["product_id"] if "product_id" in request.args else None
 
-        if not prodcut_id:
+        if not product_id:
             msg = "Product id is missing"
         else:
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute(
-                'SELECT * FROM products')
+                'SELECT * FROM products WHERE product_id= %s', (product_id, ))
             data = cursor.fetchone()
             cursor.close()
             if data:
