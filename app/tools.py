@@ -1,9 +1,14 @@
 from flask import current_app, request, jsonify
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from app import mysql
+from app import mysql, ALLOWED_EXTENSIONS
 import MySQLdb.cursors
+import base64
+from PIL import Image
+import io
+import os
 
 ###################
 # XỬ LÝ MẬT KHẨU #
@@ -18,6 +23,36 @@ def password(password):
 #--------------------------------------------
 def verify_password(password_hash, password):
     return check_password_hash(password_hash, password)
+
+##############
+# XỬ LÝ ẢNH #
+############
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def upload_image(img_name, img_b64, size=None):
+    try:
+        img_binary = base64.b64decode(img_b64)
+        img = Image.open(io.BytesIO(img_binary))
+        img_name = secure_filename(img_name)
+        if size:
+            img = img.resize(size)
+        img.save(os.path.join(current_app.config["UPLOAD_FOLDER"], img_name))
+        return True
+    except:
+        return False
+
+def get_base64_image(image_name):
+    image_base64 = None
+    try:
+        with open(os.path.join(current_app.config["UPLOAD_FOLDER"], image_name), 'rb') as image_file:
+            image_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+        return image_base64
+    except:
+        return image_base64
+
 
 #######################
 # TẠO JSON WEB TOKEN #

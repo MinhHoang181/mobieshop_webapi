@@ -1,4 +1,5 @@
 from app import mysql
+from app.tools import get_base64_image
 import MySQLdb.cursors
 
 # Khách hàng
@@ -67,7 +68,8 @@ class Permission():
     ACCOUNT_MANAGER = "AccountManager"
     PRODUCT_MANAGER = "ProductManager"
     BRAND_MANAGER = "BrandManager"
-    COUPON_MANAGER = "CouponManager"
+    BILL_MANAGER = "BillManager"
+    ORDER_MANAGER = "OrderManager"
 
     def __init__(self, permission):
         self.id = permission[0]
@@ -89,7 +91,7 @@ class Product():
     def __init__(self, product):
         self.id = product["product_id"] if product else None
         self.name = product["product_name"] if product else None
-        self.thumbnail = product["product_thumbnail"] if product else None
+        self.thumbnail = Image(product["product_thumbnail"]) if product else None
         self.description = product["product_description"] if product else None
         self.default_price = product["product_default_price"] if product else None
         self.sale_price = product["product_sale_price"] if product else None
@@ -107,6 +109,13 @@ class Product():
             'SELECT * FROM admins_account WHERE admin_id = % s', (product["product_last_update_who"], )
         )
         self.last_update_who = Admin(cursor.fetchone())
+
+class Image():
+    def __init__(self, image_name):
+        self.name = image_name
+
+        image_base64 = get_base64_image(image_name)
+        self.base64 = image_base64 if image_base64 else None
 
 # nhãn hiệu
 class Brand():
@@ -178,6 +187,8 @@ class Bill():
 class Order():
     def __init__(self, order):
         self.bill = order["bill_id"]
+        self.address = order["address"]
+        self.phone = order["phone_number"]
         self.status = order["status"]
         self.last_update = order["last_when_update"]
 
@@ -203,5 +214,24 @@ class Order():
             self.admin = {
                 "admin_id": data["admin_id"],
                 "admin_name": data["admin_name"]
+            }
+
+class Comment():
+    def __init__(self, comment):
+        self.id = comment["comment_id"] if comment else None
+        self.product = comment["product_id"] if comment else None
+        self.content = comment["content"] if comment else None
+        self.time = comment["time"] if comment else None
+        self.customer = {}
+        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+        cursor.execute(
+            'SELECT * FROM customers_account WHERE customer_id = % s', 
+            (comment["customer_id"],)
+        )
+        data = cursor.fetchone()
+        if data:
+            self.customer = {
+                "customer_id": data["customer_id"],
+                "customer_name": data["customer_name"]
             }
         
