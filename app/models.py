@@ -185,12 +185,17 @@ class Bill():
                     'SELECT * FROM products WHERE product_id = % s', (row["product_id"], )
                 )
                 x = cursor.fetchone()
+                x = Product(x)
                 product = {
-                    "product_id": x["product_id"],
-                    "product_name": x["product_name"],
-                    "product_price": int(x["product_sale_price"]),
+                    "product_id": x.id,
+                    "product_name": x.name,
+                    "product_thumbnail": {
+                        "image_name": x.thumbnail.name,
+                        "image_base64": x.thumbnail.base64
+                    },
+                    "product_price": int(x.sale_price),
                     "quantity": int(row["quantity"]),
-                    "product_total": int(x["product_sale_price"]) * int(row["quantity"])
+                    "product_total": int(x.sale_price) * int(row["quantity"])
                 }
                 self.products.append(product)
 
