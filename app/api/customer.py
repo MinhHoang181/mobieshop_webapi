@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.tools import generate_jwt_confirm_email, generate_jwt_customer_unconfirm, password, send_confirm_email, token_required_customer_unconfirm, verify_password, generate_jwt_customer, token_required_customer, check_verify_email
+from app.tools import generate_jwt_confirm_email, generate_jwt_customer_unconfirm, password, send_bill_email, send_confirm_email, token_required_customer_unconfirm, verify_password, generate_jwt_customer, token_required_customer, check_verify_email
 from app import mysql
 import MySQLdb.cursors
 from app.models import Bill, Cart, Customer, Order
@@ -145,7 +145,7 @@ def logout(current_user):
 # - biến truyền vào là confirm_token trong json body
 #----------------------------------------------------
 @customer.route("/customer/verify", methods=["POST"])
-@token_required_customer
+@token_required_customer_unconfirm
 @check_verify_email
 def confirm_customer(current_user):
     status = False
@@ -514,13 +514,14 @@ def buy_create_bill_and_order(current_user):
             msg = "Order has been create"
 
             # xoá giỏ hàng
-            cursor.execute(
-                'DELETE FROM carts WHERE customer_id = % s', 
-            (current_user.id,))
-            mysql.connection.commit()
+            # cursor.execute(
+            #     'DELETE FROM carts WHERE customer_id = % s', 
+            # (current_user.id,))
+            # mysql.connection.commit()
             cursor.close()
 
             # Gửi bill tới email
+            send_bill_email("phamminhhoang181@gmail.com", bill)
 
         else:
             msg = "Don't have any product in cart to create bill"

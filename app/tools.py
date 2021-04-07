@@ -40,6 +40,7 @@ def send_confirm_email(url, to, token):
 def send_bill_email(to, bill):
     msg = Message("Hoá đơn mua hàng", recipients=[to], sender="SOA Mobile Shop")
     msg.body = render_template("bill_email.txt", bill=bill)
+    mail.send(msg)
 
 ##############
 # XỬ LÝ ẢNH #
