@@ -224,7 +224,7 @@ def add_product(current_user):
             # Lưu danh sách tên ảnh của sản phẩm đã upload thành công vào SQL
             for image in images:
                 cursor.execute(
-                    'INSERT INTO product_image(produt_id, image) VALUES (% s, % s)',
+                    'INSERT INTO product_image(product_id, image) VALUES (% s, % s)',
                     (product_id, image,)
                 )
                 mysql.connection.commit()
@@ -232,7 +232,7 @@ def add_product(current_user):
             cursor.close()
             status = True
             msg = "You have successfully added product"
-    return jsonify(status=status, msg=msg)
+    return jsonify(status=status, msg=msg, product_id=product_id)
 
 # Sửa sản phẩm
 # - Thuộc tính nào cần sửa thì truyền vào json
