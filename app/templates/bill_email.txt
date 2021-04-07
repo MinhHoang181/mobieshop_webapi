@@ -1,4 +1,19 @@
 Gửi {{ customer_email }},
 Bạn đã mua hàng tại webshite SOA Mobile Shop:
-{{ url }}
+
+Mã hoá đơn: {{ bill.id }}
+--------------
+Thời gian: {{ bill.time_create }}
+--------
+
+Sản phẩm                                        Số lượng                        Giá
+
+{% for product in bill.products %}
+
+    {{ product["product_name"] }}               {{ product["product_total"] }}   {{ product["quantity"]}}
+{%endfor%}
+
+                                Giá
+
+                                            {{ bill.total }}
 Cảm ơn,

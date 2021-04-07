@@ -43,7 +43,7 @@ def get_role(current_user):
         # không có cả 2 là xem chức vụ của admin request
         else:
             cursor.execute(
-                'SELECT * FROM roles WHERE role_id = % s', (current_user[4], ))
+                'SELECT * FROM roles WHERE role_name = % s', (current_user["admin_role"], ))
             data = cursor.fetchone()
             cursor.close()
         if data:
