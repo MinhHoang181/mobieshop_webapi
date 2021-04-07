@@ -1,0 +1,4 @@
+Gửi {{ customer_email }},
+Để xác thực tài khoản, xin vui lòng nhấn vào link bên dưới:
+{{ url }}
+Cảm ơn,

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from app.tools import password, verify_password, generate_jwt_customer, token_required_customer
+from app.tools import generate_jwt_confirm_email, generate_jwt_customer_unconfirm, password, send_confirm_email, token_required_customer_unconfirm, verify_password, generate_jwt_customer, token_required_customer, check_verify_email
 from app import mysql
 import MySQLdb.cursors
 from app.models import Bill, Cart, Customer, Order
@@ -23,36 +23,42 @@ def login():
 
         data = request.json if request.json else []
 
-        customer_name = data["customer_name"] if "customer_name" in data else None
+        customer_email = data["customer_email"] if "customer_email" in data else None
         customer_password = data["customer_password"] if "customer_password" in data else None
 
-        if not customer_name:
-            msg = "Customer name is missing"
+        if not customer_email:
+            msg = "Customer email is missing"
         elif not customer_password:
             msg = "Customer password is missing"
         else:
         # ket noi database
             cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             cursor.execute(
-                'SELECT * FROM customers_account WHERE customer_name = % s', (
-                    customer_name,)
+                'SELECT * FROM customers_account WHERE customer_email = % s', (
+                    customer_email,)
             )
             account = cursor.fetchone()
             cursor.close()
 
             if not account:
-                msg = "Username is not exits"
+                msg = "Email is not exits"
             elif not verify_password(account["customer_password"], customer_password):
                 msg = "Password is not correct"
             # neu dung tai khoan trong DB
             else:
                 account = Customer(account)
-                status = True
-                user = {
-                    "customer_id": account.id,
-                    "customer_name": account.name,
-                }
-                access_token = generate_jwt_customer(account.name)
+                if  not account.confirmed:
+                    msg = "Unauthenticated account, please confirm account by email"
+                    access_token = generate_jwt_customer_unconfirm(account.name)
+                    return jsonify(status=status, msg=msg, confirm=False, access_token=access_token)
+                else:
+                    status = True
+                    user = {
+                        "customer_id": account.id,
+                        "customer_name": account.name,
+                        "customer_email": account.email,
+                    }
+                    access_token = generate_jwt_customer(account.name)
     return jsonify(status=status, msg=msg, access_token=access_token, user=user)
 
 # Đăng ký
@@ -72,27 +78,40 @@ def register():
         customer_address = data["customer_address"] if "customer_address" in data else None
         customer_phone = data["customer_phone"] if "customer_phone" in data else None
 
-        if not customer_name:
-            msg = "Customer name is missing"
+        url_confirm = data["url_confirm"] if "url_confirm" in data else None
+
+        if not customer_email:
+            msg = "Customer email is missing"
         elif not customer_password:
             msg = "Customer password is missing"
-        elif not customer_email:
-            msg = "Customer email is missing"
+        elif not url_confirm:
+            msg = "Url confirm is missing"
         else:
             cursor = mysql.connection.cursor()
             cursor.execute(
-                'SELECT * FROM customers_account WHERE customer_name = % s', (customer_name, ))
-            account = cursor.fetchone()
-            if account:
-                msg = "Account already exists !"
+                'SELECT * FROM customers_account WHERE customer_email = % s', (customer_email, ))
+            check_email = cursor.fetchone()
+
+            cursor.execute(
+                'SELECT * FROM customers_account WHERE customer_phone = % s', (customer_phone, ))
+            check_phone = cursor.fetchone()
+            if check_email:
+                msg = "Email already exists !"
+            elif check_phone:
+                msg = "Phone already exists !"
             else:
                 cursor.execute(
-                    'INSERT INTO customers_account VALUES (NULL, % s, % s, % s, % s, % s)', (customer_name, password(customer_password), customer_email, customer_address, customer_phone, ))
+                    'INSERT INTO customers_account(customer_name, customer_password, customer_emai, customer_address, customer_phone) VALUES (% s, % s, % s, % s, % s)', 
+                    (customer_name, password(customer_password), customer_email, customer_address, customer_phone, )
+                )
                 mysql.connection.commit()
                 cursor.close()
 
+                token = generate_jwt_confirm_email(customer_email)
+                send_confirm_email(url_confirm, customer_email, token)
+
                 status = True
-                msg = "You have successfully registered !"
+                msg = "You have successfully registered! Please confirm your email!"
 
     return jsonify(status=status, msg=msg)
 
@@ -116,6 +135,53 @@ def logout(current_user):
 
         status = True
         msg = "You have logout!"
+    return jsonify(status=status, msg=msg)
+
+#######################
+# XÁC THỰC TÀI KHOẢN #
+#####################
+
+# xác thực email
+# - biến truyền vào là confirm_token trong json body
+#----------------------------------------------------
+@customer.route("/customer/verify", methods=["POST"])
+@token_required_customer
+@check_verify_email
+def confirm_customer(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        current_user = Customer(current_user)
+
+        cursor = mysql.connection.cursor()
+        cursor.execute(
+            'UPDATE customers_account SET confirmed = % s WHERE customer_id = % s', (True, current_user.id, )
+        )
+        status = True
+        msg = "Email verification is successful"
+    return jsonify(status=status, msg=msg)
+
+# gửi email xác thực dành cho trường hợp muốn gửi lại
+#-----------------------------------------------------------
+@customer.route("/customer/verify/resend", methods=["POST"])
+@token_required_customer_unconfirm
+def send_verify_mail(current_user):
+    status = False
+    msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        url_confirm = data["url_confirm"] if "url_confirm" in data else None
+        if not url_confirm:
+            msg = "Url confirm is missing"
+        else:
+            current_user = Customer(current_user)
+            if current_user.confirmed:
+                msg = "Your Email already verified"
+            else:
+                token = generate_jwt_confirm_email(current_user.email)
+                send_confirm_email(url_confirm, current_user.email, token)
+                status = True
+                msg = "Confirm link has been sent to your email"
     return jsonify(status=status, msg=msg)
 
 ##########

@@ -108,6 +108,7 @@ def get_product_all(current_user):
                         "image_name": row.thumbnail.name,
                         "image_base64": row.thumbnail.base64
                     },
+                    "product_images": row.images,
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
@@ -138,6 +139,7 @@ def add_product(current_user):
         product_name = data["product_name"] if "product_name" in data else None
         brand_id = data["brand_id"] if "brand_id" in data else None
         product_thumbnail = data["product_thumbnail"] if "product_thumbnail" in data else None
+        product_images = data["product_images"] if "product_images" in data else None
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else 0
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else 0
@@ -178,6 +180,35 @@ def add_product(current_user):
                 # nếu không có ảnh thì cho ảnh mặc định
                 product_thumbnail = NO_IMAGE
 
+            # lưu tất cả ảnh của sản phẩm
+            images = []
+            if product_images:
+                count = 0
+                for image in product_images:
+                    count += 1
+                    # lấy 2 biến name và base64
+                    image_name = image["image_name"] if "image_name" in image else None
+                    image_base64 = image["image_base64"] if "image_base64" in image else None
+                    # nếu không có 2 biến này hoặc rỗng thì báo lỗi
+                    if not image_base64 or image_base64 == "":
+                        msg += "\n Image " + str(count) + " base64 is missing"
+                    elif not image_name or image_name == "":
+                        msg += "\n Image " + str(count) + " name is missing"
+                    # nếu định dạng ảnh không cho phép báo lỗi
+                    elif not allowed_file(image_name):
+                        msg += "\n Image " + str(count) + " format is not allow"
+                    # nếu thoả hết thì upload ảnh lên server
+                    else:
+                        # upload lấy dạng ảnh thường
+                        upload = upload_image(image_name, image_base64)
+                        # nếu không upload thành công thì báo lỗi
+                        if not upload:
+                            msg += "\n Image " + str(count) +  " upload fail"
+                        # upload thành công lấy file name lưu lên SQL
+                        else:
+                            images.append(image_name)
+
+
             # lấy danh tính admin đang request
             current_user = Admin(current_user)
 
@@ -187,8 +218,17 @@ def add_product(current_user):
                     product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, time_warranty, current_user.id, product_last_update_when)
             )
             mysql.connection.commit()
-            cursor.close()
+            product_id = cursor.lastrowid
 
+            # Lưu danh sách tên ảnh của sản phẩm đã upload thành công vào SQL
+            for image in images:
+                cursor.execute(
+                    'INSERT INTO product_image(produt_id, image) VALUES (% s, % s)',
+                    (product_id, image,)
+                )
+                mysql.connection.commit()
+
+            cursor.close()
             status = True
             msg = "You have successfully added product"
     return jsonify(status=status, msg=msg)
@@ -210,6 +250,7 @@ def edit_product(current_user):
         product_name = data["product_name"] if "product_name" in data else None
         brand_id = data["brand_id"] if "brand_id" in data else None
         product_thumbnail = data["product_thumbnail"] if "product_thumbnail" in data else None
+        product_images = data["product_images"] if "product_images" in data else None
         product_description = data["product_description"] if "product_description" in data else None
         product_default_price = data["product_default_price"] if "product_default_price" in data else None
         product_sale_price = data["product_sale_price"] if "product_sale_price" in data else None
@@ -258,8 +299,45 @@ def edit_product(current_user):
                         if not upload:
                             msg = "Image upload fail"
                             return jsonify(status=status, msg=msg)
-                        # upload thành công lấy file name lưu lên SQL
-                        product_thumbnail = image_name
+                        else:
+                            # upload thành công lấy file name lưu lên SQL
+                            product_thumbnail = image_name
+
+                # lưu tất cả ảnh của sản phẩm
+                images = []
+                if product_images:
+                    count = 0
+                    for image in product_images:
+                        count += 1
+                        # lấy 3 biến name và base64 và id
+                        image_id = image["image_id"] if "image_id" in image else None
+                        image_name = image["image_name"] if "image_name" in image else None
+                        image_base64 = image["image_base64"] if "image_base64" in image else None
+                        # nếu không có 3 biến này hoặc rỗng thì báo lỗi
+                        if not image_base64 or image_base64 == "":
+                            msg += "\n Image " + str(count) + " base64 is missing"
+                        elif not image_name or image_name == "":
+                            msg += "\n Image " + str(count) + " name is missing"
+                        elif not image_id:
+                            msg += "\n Image " + str(count) + " id is missing"
+                        # nếu định dạng ảnh không cho phép báo lỗi
+                        elif not allowed_file(image_name):
+                            msg += "\n Image " + str(count) + " format is not allow"
+                        # nếu thoả hết thì upload ảnh lên server
+                        else:
+                            # upload lấy dạng ảnh thường
+                            upload = upload_image(image_name, image_base64)
+                            # nếu không upload thành công thì báo lỗi
+                            if not upload:
+                                msg += "\n Image " + str(count) +  " upload fail"
+                            # upload thành công lấy file name lưu lên SQL
+                            else:
+                                images.append(
+                                    {
+                                        "image_id": image_id,
+                                        "image_name": image_name
+                                    }
+                                )
 
                 # nếu không có biến nào thì lấy giá trị cũ biến đó
                 if not product_name:
@@ -283,11 +361,17 @@ def edit_product(current_user):
                 )
                 mysql.connection.commit()
 
-                status = True
+                # Lưu danh sách tên ảnh của sản phẩm đã upload thành công vào SQL
+                for image in images:
+                    cursor.execute(
+                        'UPDATE product_image SET image = % s WHERE product_image_id = % s',
+                        (image["image_name"], image["image_id"], )
+                    )
+                    mysql.connection.commit()
                 msg = "Product info has been updated!"
             else:
                 msg = "Fail to update info!"
-
+            cursor.close()
     return jsonify(status=status, msg=msg)
 
 # Xoá sản phẩm

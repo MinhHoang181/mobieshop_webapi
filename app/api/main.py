@@ -1,7 +1,6 @@
 from flask import request, jsonify, Blueprint
-from app.models import Brand, Comment, Product
+from app.models import Brand, Comment, Customer, Product
 import MySQLdb.cursors
-from datetime import datetime
 from app import mysql
 import math
 
@@ -52,6 +51,7 @@ def get_product():
                         "image_name": data.thumbnail.name,
                         "image_base64": data.thumbnail.base64
                     },
+                    "product_images": data.images,
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
@@ -102,6 +102,7 @@ def get_product_all():
                         "image_name": row.thumbnail.name,
                         "image_base64": row.thumbnail.base64
                     },
+                    "product_images": row.images,
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,
@@ -242,6 +243,10 @@ def get_comment_all():
 # CÁC API CHƯA XỬ LÝ, PHÂN LOẠI #
 ################################
 
+#############
+# API TEST #
+###########
+
 from app.tools import allowed_file, upload_image
 
 @main.route("/upload", methods=["POST"])
@@ -268,30 +273,27 @@ def upload():
                 msg = "Image upload fail"
     return jsonify(status=status, msg=msg)     
 
-# Search Product by Name
-@main.route("/searchproduct", methods=['GET', 'POST'])
-def searchproduct():
+from app.tools import send_confirm_email, generate_jwt_confirm_email
+@main.route("/send", methods=["POST"])
+def send_mail():
     status = False
     msg = ""
+    if request.method == "POST":
+        data = request.json if request.json else []
+        customer_email = data["customer_email"] if "customer_email" in data else None
+        url_confirm = data["url_confirm"] if "url_confirm" in data else None
+        if not customer_email:
+            msg = "Customer email is missing"
+        elif not url_confirm:
+            msg = "Url confirm is missing"
+        else:
+            token = generate_jwt_confirm_email(customer_email)
+            send_confirm_email(url_confirm, "phamminhhoang181@gmail.com", token)
+            status = True
+    return jsonify(status=status, msg=msg)
+    
+#########################################
 
-    if request.method == "GET":
-
-        data = request.json
-
-        product_name = data["product_name"]
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        query = "SELECT product_name FROM products WHERE product_name LIKE '{}%' order by product_name".format(
-            product_name)
-        cursor.execute(query)
-        result = cursor.fetchall()
-        cursor.close()
-
-        status = True
-        msg = "List of product"
-    else:
-        msg = "False to searched"
-
-    return jsonify(status=status, msg=msg, result=result)
 
 # Search Customer by Name
 @main.route("/searchcustomer", methods=['GET', 'POST'])
@@ -343,28 +345,3 @@ def searchuser():
         msg = "False to searched"
 
     return jsonify(status=status, msg=msg, result=result)
-
-
-# Get Products by Brand
-@main.route("/getproductbrand", methods=['GET', 'POST'])
-def getproductbrand():
-    status = False
-    msg = ""
-
-    if request.method == "GET":
-
-        data = request.json
-
-        brand_id = data["brand_id"]
-        cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-        cursor.execute(
-            'SELECT * FROM products WHERE brand_id = % s', (brand_id, ))
-        products = cursor.fetchall()
-        cursor.close()
-
-        status = True
-        msg = "List of product via brand"
-    else:
-        msg = "False to get products via brand"
-
-    return jsonify(status=status, msg=msg, products=products)
