@@ -224,7 +224,7 @@ def add_product(current_user):
             # Lưu danh sách tên ảnh của sản phẩm đã upload thành công vào SQL
             for image in images:
                 cursor.execute(
-                    'INSERT INTO product_image(produt_id, image) VALUES (% s, % s)',
+                    'INSERT INTO product_image(product_id, image) VALUES (% s, % s)',
                     (product_id, image,)
                 )
                 mysql.connection.commit()
