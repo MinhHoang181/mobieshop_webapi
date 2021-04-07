@@ -1,0 +1,4 @@
+Gửi {{ customer_email }},
+Bạn đã mua hàng tại webshite SOA Mobile Shop:
+{{ url }}
+Cảm ơn,

@@ -101,7 +101,7 @@ def register():
                 msg = "Phone already exists !"
             else:
                 cursor.execute(
-                    'INSERT INTO customers_account(customer_name, customer_password, customer_emai, customer_address, customer_phone) VALUES (% s, % s, % s, % s, % s)', 
+                    'INSERT INTO customers_account(customer_name, customer_password, customer_email, customer_address, customer_phone) VALUES (% s, % s, % s, % s, % s)', 
                     (customer_name, password(customer_password), customer_email, customer_address, customer_phone, )
                 )
                 mysql.connection.commit()
@@ -458,7 +458,7 @@ def caculate_total_cart(current_user):
 #############
 # MUA HÀNG #
 ###########
-@customer.route("/buy", methods=["POST"])
+@customer.route("/customer/buy", methods=["POST"])
 @token_required_customer
 def buy_create_bill_and_order(current_user):
     status = False
@@ -512,8 +512,19 @@ def buy_create_bill_and_order(current_user):
             mysql.connection.commit()
             status = True
             msg = "Order has been create"
+
+            # xoá giỏ hàng
+            cursor.execute(
+                'DELETE FROM carts WHERE customer_id = % s', 
+            (current_user.id,))
+            mysql.connection.commit()
+            cursor.close()
+
+            # Gửi bill tới email
+
         else:
             msg = "Don't have any product in cart to create bill"
+
     return jsonify(status=status, msg=msg)
 
 
