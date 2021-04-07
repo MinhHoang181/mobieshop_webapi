@@ -514,14 +514,14 @@ def buy_create_bill_and_order(current_user):
             msg = "Order has been create"
 
             # xoá giỏ hàng
-            # cursor.execute(
-            #     'DELETE FROM carts WHERE customer_id = % s', 
-            # (current_user.id,))
-            # mysql.connection.commit()
+            cursor.execute(
+                'DELETE FROM carts WHERE customer_id = % s', 
+            (current_user.id,))
+            mysql.connection.commit()
             cursor.close()
 
             # Gửi bill tới email
-            send_bill_email("phamminhhoang181@gmail.com", bill)
+            send_bill_email(current_user.email, bill)
 
         else:
             msg = "Don't have any product in cart to create bill"
