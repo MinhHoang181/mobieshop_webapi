@@ -169,7 +169,7 @@ def add_product(current_user):
                 # nếu thoả hết thì upload ảnh lên server
                 else:
                     # upload lấy dạng ảnh đại diện 256x256 (TTHUMBNAIL)
-                    upload = upload_image(image_name, image_base64, size=SIZE_THUMNAIL)
+                    upload = upload_image(image_name, image_base64)
                     # nếu không upload thành công thì báo lỗi
                     if not upload:
                         msg = "Image upload fail"
