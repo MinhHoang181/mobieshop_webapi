@@ -217,8 +217,9 @@ def add_product(current_user):
                 'INSERT INTO products VALUES (NULL, % s, % s, % s, % s, % s, % s, % s, % s, % s)', (
                     product_name, brand_id, product_thumbnail, product_description, product_default_price, product_sale_price, time_warranty, current_user.id, product_last_update_when)
             )
-            mysql.connection.commit()
             product_id = cursor.lastrowid
+            mysql.connection.commit()
+            
 
             # Lưu danh sách tên ảnh của sản phẩm đã upload thành công vào SQL
             for image in images:
