@@ -11,7 +11,7 @@ def create_app():
     app.config["SECRET_KEY"] = "mobileshop_soa"
 
     # thiết lập kết nối MySQL
-    app.config['MYSQL_Host'] = 'localhost'
+    app.config['MYSQL_Host'] = '127.0.0.1'
     app.config['MYSQL_USER'] = 'root'
     app.config['MYSQL_PASSWORD'] = ''
     app.config['MYSQL_DB'] = 'mobileshop'
