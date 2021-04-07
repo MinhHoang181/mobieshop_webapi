@@ -10,7 +10,7 @@ Sản phẩm                                        Số lượng               
 
 {% for product in bill.products %}
 
-    {{ product["product_name"] }}               {{ product["product_total"] }}   {{ product["quantity"]}}
+    {{ product["product_name"] }}               {{ product["quantity"]}}   {{ product["product_total"] }}
 {%endfor%}
 
                                 Giá

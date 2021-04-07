@@ -526,7 +526,7 @@ def buy_create_bill_and_order(current_user):
         else:
             msg = "Don't have any product in cart to create bill"
 
-    return jsonify(status=status, msg=msg)
+    return jsonify(status=status, msg=msg, email=current_user.email)
 
 
 
