@@ -301,6 +301,10 @@ def get_cart(current_user):
                 product = {
                     "product_id": row.product.id,
                     "product_name": row.product.name,
+                    "product_thumbnail": {
+                        "image_name": row.product.thumbnail.name,
+                        "image_base64": row.product.thumbnail.base64,
+                    },
                     "product_price": row.product.sale_price,
                     "quantity": row.quantity
                 }

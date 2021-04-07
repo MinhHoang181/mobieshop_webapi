@@ -232,7 +232,7 @@ def add_product(current_user):
             cursor.close()
             status = True
             msg = "You have successfully added product"
-    return jsonify(status=status, msg=msg)
+    return jsonify(status=status, msg=msg, product_id=product_id)
 
 # Sửa sản phẩm
 # - Thuộc tính nào cần sửa thì truyền vào json
