@@ -36,9 +36,9 @@ def upload_image(img_name, img_b64, size=None):
     try:
         img_binary = base64.b64decode(img_b64)
         img = Image.open(io.BytesIO(img_binary))
-        img_name = secure_filename(img_name)
-        if size:
-            img = img.resize(size)
+        # img_name = secure_filename(img_name)
+        # if size:
+        #     img = img.resize(size)
         img.save(os.path.join(current_app.config["UPLOAD_FOLDER"], img_name))
         return True
     except:
