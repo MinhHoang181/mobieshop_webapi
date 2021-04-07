@@ -58,6 +58,18 @@ def upload_image(img_name, img_b64, size=None):
     except:
         return False
 
+# xoá ảnh trên server
+def delete_image(image_name):
+    try:
+        path = os.path.join(current_app.config["UPLOAD_FOLDER"], image_name)
+        if os.path.exists(path):
+            os.remove(path)
+            return True
+        else:
+            return False
+    except:
+        return False
+
 # lấy ảnh dạng base64 từ server
 def get_base64_image(image_name):
     image_base64 = None

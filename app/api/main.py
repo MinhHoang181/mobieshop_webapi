@@ -51,6 +51,7 @@ def get_product():
                         "image_name": data.thumbnail.name,
                         "image_base64": data.thumbnail.base64
                     },
+                    "product_images": data.images,
                     "product_description": data.description,
                     "product_default_price": data.default_price,
                     "product_sale_price": data.sale_price,
@@ -101,6 +102,7 @@ def get_product_all():
                         "image_name": row.thumbnail.name,
                         "image_base64": row.thumbnail.base64
                     },
+                    "product_images": row.images,
                     "product_description": row.description,
                     "product_default_price": row.default_price,
                     "product_sale_price": row.sale_price,

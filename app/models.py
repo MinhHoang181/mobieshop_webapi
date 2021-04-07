@@ -110,9 +110,24 @@ class Product():
             'SELECT * FROM admins_account WHERE admin_id = % s', (product["product_last_update_who"], )
         )
         self.last_update_who = Admin(cursor.fetchone())
+        # lấy tất cả ảnh của sản phẩm
+        self.images = []
+        cursor.execute(
+            'SELECT * FROM product_image WHERE product_id = % s', (self.id,)
+        )
+        data = cursor.fetchall()
+        for row in data:
+            row = Image(row["image"], row["product_image_id"])
+            image = {
+                "image_id": row.id,
+                "image_name": row.name,
+                "image_base64": row.base64
+            }
+            self.images.append(image)
 
 class Image():
-    def __init__(self, image_name):
+    def __init__(self, image_name, product_image_id=None):
+        self.id = product_image_id
         self.name = image_name
 
         image_base64 = get_base64_image(image_name)
