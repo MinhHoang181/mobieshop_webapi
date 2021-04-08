@@ -101,29 +101,38 @@ class Product():
 
         cursor = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
         # Lấy thông tin nhãn hiệu
-        cursor.execute(
-            'SELECT * FROM brands WHERE brand_id = % s', (product["brand_id"], )
-        )
-        self.brand = Brand(cursor.fetchone())
+        if product:
+            cursor.execute(
+                'SELECT * FROM brands WHERE brand_id = % s', (product["brand_id"], )
+            )
+            self.brand = Brand(cursor.fetchone())
+        else:
+            self.brand = None
         # Lấy thông tin quản trị viên cập nhật cuối
-        cursor.execute(
-            'SELECT * FROM admins_account WHERE admin_id = % s', (product["product_last_update_who"], )
-        )
-        self.last_update_who = Admin(cursor.fetchone())
+        if product:
+            cursor.execute(
+                'SELECT * FROM admins_account WHERE admin_id = % s', (product["product_last_update_who"], )
+            )
+            self.last_update_who = Admin(cursor.fetchone())
+        else:
+            self.last_update_who = None
         # lấy tất cả ảnh của sản phẩm
-        self.images = []
-        cursor.execute(
-            'SELECT * FROM product_image WHERE product_id = % s', (self.id,)
-        )
-        data = cursor.fetchall()
-        for row in data:
-            row = Image(row["image"], row["product_image_id"])
-            image = {
-                "image_id": row.id,
-                "image_name": row.name,
-                "image_base64": row.base64
-            }
-            self.images.append(image)
+        if product:
+            self.images = []
+            cursor.execute(
+                'SELECT * FROM product_image WHERE product_id = % s', (self.id,)
+            )
+            data = cursor.fetchall()
+            for row in data:
+                row = Image(row["image"], row["product_image_id"])
+                image = {
+                    "image_id": row.id,
+                    "image_name": row.name,
+                    "image_base64": row.base64
+                }
+                self.images.append(image)
+        else:
+            self.images = []
 
 class Image():
     def __init__(self, image_name, product_image_id=None):
