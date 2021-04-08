@@ -1,15 +1,22 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.7
+-- version 5.0.4
 -- https://www.phpmyadmin.net/
 --
--- Host: localhost:3306
--- Generation Time: Apr 06, 2021 at 07:36 AM
--- Server version: 5.7.32
--- PHP Version: 7.4.12
+-- Host: 127.0.0.1
+-- Generation Time: Apr 08, 2021 at 08:06 AM
+-- Server version: 10.4.17-MariaDB
+-- PHP Version: 8.0.1
 
 SET FOREIGN_KEY_CHECKS=0;
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
 SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
 --
 -- Database: `mobileshop`
@@ -66,19 +73,10 @@ INSERT INTO `admins_account` (`admin_id`, `admin_name`, `admin_password`, `admin
 CREATE TABLE `bills` (
   `bill_id` int(11) NOT NULL,
   `customer_id` int(11) NOT NULL,
-  `fee_ship` int(11) NOT NULL DEFAULT '0',
-  `total` int(11) NOT NULL DEFAULT '0',
+  `fee_ship` int(11) NOT NULL DEFAULT 0,
+  `total` int(11) NOT NULL DEFAULT 0,
   `time_create` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `bills`
---
-
-INSERT INTO `bills` (`bill_id`, `customer_id`, `fee_ship`, `total`, `time_create`) VALUES
-(6, 1, 0, 9200, '2021-04-03 15:17:53'),
-(7, 1, 0, 9200, '2021-04-03 15:23:48'),
-(13, 1, 0, 9200, '2021-04-05 16:12:10');
 
 -- --------------------------------------------------------
 
@@ -103,6 +101,16 @@ CREATE TABLE `blacklist_token_customer` (
   `token` varchar(1000) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `blacklist_token_customer`
+--
+
+INSERT INTO `blacklist_token_customer` (`customer_id`, `token`, `created`) VALUES
+(1, 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzc4OTcwMiwiZXhwIjoxNjE3NzkzMzAyfQ.eyJjdXN0b21lcl9uYW1lIjoiY3VzdG9tZXIifQ.fUNR0fRrlobbtz1n0hx7hFYH3DOGCwaude98CuoT0av9Qwn0CaGukOhiXbXBof80dbePjxPHo2aYkFp3oWi-2A', '2021-04-07 17:31:48'),
+(1, 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzc5Mjg5MCwiZXhwIjoxNjE3Nzk2NDkwfQ.eyJjdXN0b21lcl9uYW1lIjoiY3VzdG9tZXIifQ.nw0T60XiuXpfSgn7caosBVCH9CawKAhVqjc67jh9tpjxqpsSK2YQwBC4OIOLlAssU36U9pG5eASG3tDGhiASPg', '2021-04-07 17:58:45'),
+(1, 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzc5ODQ3MCwiZXhwIjoxNjE3ODAyMDcwfQ.eyJjdXN0b21lcl9uYW1lIjoiY3VzdG9tZXIifQ.4yU_q5-54XuIq4b0iRJyLjYirPOlDTUITaLasUMuVr4QvUVwzVWp68qmvXa6-sU4VzWi0BclNtkKmWiRAWLedA', '2021-04-07 19:38:24'),
+(1, 'eyJhbGciOiJIUzUxMiIsImlhdCI6MTYxNzc5OTEyNCwiZXhwIjoxNjE3ODAyNzI0fQ.eyJjdXN0b21lcl9uYW1lIjoiY3VzdG9tZXIifQ.XhcBBOXeDc51VChsIbh8MMurUl9lDBGO12zybp9DcEOkZ1U6K5tp5VPgx5H1cHU83iSoH0uQaNg-svyhHIiYVA', '2021-04-07 19:39:47');
 
 -- --------------------------------------------------------
 
@@ -141,8 +149,7 @@ CREATE TABLE `carts` (
 --
 
 INSERT INTO `carts` (`customer_id`, `product_id`, `quantity`) VALUES
-(1, 1, 6),
-(1, 2, 2);
+(1, 1, 1);
 
 -- --------------------------------------------------------
 
@@ -158,14 +165,6 @@ CREATE TABLE `comments` (
   `time` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
---
--- Dumping data for table `comments`
---
-
-INSERT INTO `comments` (`comment_id`, `customer_id`, `product_id`, `content`, `time`) VALUES
-(1, 1, 1, 'test comment', '2021-04-05 20:17:54'),
-(2, 1, 1, 'test comment 2', '2021-04-05 20:35:56');
-
 -- --------------------------------------------------------
 
 --
@@ -179,7 +178,7 @@ CREATE TABLE `customers_account` (
   `customer_email` varchar(100) NOT NULL,
   `customer_address` varchar(100) DEFAULT NULL,
   `customer_phone` varchar(100) DEFAULT NULL,
-  `confirmed` tinyint(1) NOT NULL DEFAULT '0'
+  `confirmed` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 --
@@ -187,7 +186,7 @@ CREATE TABLE `customers_account` (
 --
 
 INSERT INTO `customers_account` (`customer_id`, `customer_name`, `customer_password`, `customer_email`, `customer_address`, `customer_phone`, `confirmed`) VALUES
-(1, 'customer', 'pbkdf2:sha256:150000$QheNYrFB$65dbd315da08b1cc81ff4c6f9f16510c83b0cb80234a3f705c9538b6afe89764', 'customer@gmail.com', '1/1 Nguyễn Hữu Thọ', '0123456789', 1);
+(1, 'customer', 'pbkdf2:sha256:150000$QheNYrFB$65dbd315da08b1cc81ff4c6f9f16510c83b0cb80234a3f705c9538b6afe89764', 'xinloima123@gmail.com', '1/1 Nguyễn Hữu Thọ', '0123456789', 1);
 
 -- --------------------------------------------------------
 
@@ -200,17 +199,10 @@ CREATE TABLE `orders` (
   `bill_id` int(11) NOT NULL,
   `address` varchar(1000) NOT NULL,
   `phone_number` varchar(20) NOT NULL,
-  `status` tinyint(1) NOT NULL DEFAULT '0',
+  `status` tinyint(1) NOT NULL DEFAULT 0,
   `last_who_update` int(11) DEFAULT NULL,
   `last_when_update` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `orders`
---
-
-INSERT INTO `orders` (`customer_id`, `bill_id`, `address`, `phone_number`, `status`, `last_who_update`, `last_when_update`) VALUES
-(1, 13, '1/1 Nguyễn Hữu Thọ', '0123456789', 1, 1, '2021-04-05 17:48:16');
 
 -- --------------------------------------------------------
 
@@ -290,7 +282,7 @@ CREATE TABLE `products` (
   `product_description` varchar(1000) DEFAULT NULL,
   `product_default_price` bigint(20) DEFAULT NULL,
   `product_sale_price` bigint(20) DEFAULT NULL,
-  `time_warranty` int(11) NOT NULL DEFAULT '0',
+  `time_warranty` int(11) NOT NULL DEFAULT 0,
   `product_last_update_who` int(11) DEFAULT NULL,
   `product_last_update_when` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -300,24 +292,13 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumbnail`, `product_description`, `product_default_price`, `product_sale_price`, `time_warranty`, `product_last_update_who`, `product_last_update_when`) VALUES
-(1, 'IPhone Xsmas', 1, 'no_image.png', 'This is IPhone for description', 1300, 1200, 0, 1, '2021-04-05 15:06:56'),
-(2, 'IPhone 12 Pro Max', 1, 'no_image.png', 'This is IPhone Pro Max for description', 2300, 2200, 0, 1, '2021-04-05 15:07:25'),
-(3, 'test1', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:11'),
-(4, 'test2', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:15'),
-(5, 'test3', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:18'),
-(6, 'test4', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:22'),
-(7, 'test5', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:24'),
-(8, 'test6', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:28'),
-(9, 'test7', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:31'),
-(10, 'test8', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:34'),
-(11, 'test9', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:38'),
-(12, 'test10', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:41'),
-(13, 'test11', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:44'),
-(14, 'test12', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:47'),
-(15, 'test13', NULL, NULL, NULL, NULL, NULL, 0, 1, '2021-04-02 21:33:51'),
-(16, 'test13', NULL, 'no_image.png', NULL, 0, 0, 0, 1, '2021-04-05 14:16:57'),
-(17, 'test image', NULL, 'no_image.png', NULL, 0, 0, 0, 1, '2021-04-05 14:24:02'),
-(18, 'test image', NULL, 'test_product.png', NULL, 0, 0, 0, 1, '2021-04-05 14:25:04');
+(21, 'iPhone 12 Pro 128GB Chính hãng (VN/A)', 1, 'iphone-12-pro-128gb-vna_3.jpg', 'iPhone 12 Pro 128GB chính hãng (VN/A) bán tại Di Động Việt - Đại lý uỷ quyền chính thức của Apple tại Việt Nam, là phiên bản quốc tế 2 sim (Nano + Esim) chính hãng VN/A. Máy chưa Active + nguyên seal hộp, mới 100% (Fullbox)\n\niPhone 12 Pro 128GB chính hãng (VN/A) là phiên bản được phân phối chính thức bởi Apple Việt Nam, được bảo hành 12 tháng tại Trung tâm Uỷ quyền cao cấp nhất của Apple tại Việt Nam và trên toàn cầu miễn phí. Đồng thời hưởng nhiều ưu đãi, khuyến mãi hấp dẫn tại Di Động Việt.', 30990000, 26790000, 2, 1, '2021-04-08 12:17:40'),
+(22, 'iPhone 12 Pro 256GB Chính hãng (VN/A)', 1, 'iphone-12-pro-128gb-vna_3.jpg', 'iPhone 12 Pro 256GB Chính hãng (VN/A) bán tại Di Động Việt - Đại lý uỷ quyền chính thức của Apple tại Việt Nam, là phiên bản quốc tế 2 sim (Nano + Esim) chính hãng VN/A. Máy chưa Active + nguyên seal hộp, mới 100% (Fullbox)\n\niPhone 12 Pro 256GB Chính hãng (VN/A) là phiên bản được phân phối chính thức bởi Apple Việt Nam, được bảo hành 12 tháng tại Trung tâm Uỷ quyền cao cấp nhất của Apple tại Việt Nam và trên toàn cầu miễn phí. Đồng thời hưởng nhiều ưu đãi, khuyến mãi hấp dẫn tại Di Động Việt.', 34990000, 28490000, 2, 1, '2021-04-08 12:19:01'),
+(23, 'iPhone 12 Pro Max 128GB Chính hãng (VN/A)', 1, 'iphone-12-pro-max-128gb-vna_1_1.jpg', 'iPhone 12 Pro Max 128GB chính hãng (VN/A) bán tại Di Động Việt - Đại lý uỷ quyền chính thức của Apple tại Việt Nam, là phiên bản quốc tế 2 sim (Nano + Esim) chính hãng VN/A. Máy chưa Active + nguyên seal hộp, mới 100% (Fullbox)\n\niPhone 12 Pro Max 128GB chính hãng (VN/A) là phiên bản được phân phối chính thức bởi Apple Việt Nam, được bảo hành 12 tháng tại Trung tâm Uỷ quyền cao cấp nhất của Apple tại Việt Nam và trên toàn cầu miễn phí. Đồng thời hưởng nhiều ưu đãi, khuyến mãi hấp dẫn tại Di Động Việt.', 33990000, 29390000, 2, 1, '2021-04-08 12:20:41'),
+(24, 'iPhone 12 Pro Max 256GB Chính hãng (VN/A)', 1, 'iphone-12-pro-max-128gb-vna_1_1.jpg', 'iPhone 12 Pro Max 256GB chính hãng (VN/A) bán tại Di Động Việt - Đại lý uỷ quyền chính thức của Apple tại Việt Nam, là phiên bản quốc tế 2 sim (Nano + Esim) chính hãng VN/A. Máy chưa Active + nguyên seal hộp, mới 100% (Fullbox)\n\niPhone 12 Pro Max 256GB chính hãng (VN/A) là phiên bản được phân phối chính thức bởi Apple Việt Nam, được bảo hành 12 tháng tại Trung tâm Uỷ quyền cao cấp nhất của Apple tại Việt Nam và trên toàn cầu miễn phí. Đồng thời hưởng nhiều ưu đãi, khuyến mãi hấp dẫn tại Di Động Việt.', 37990000, 31990000, 2, 1, '2021-04-08 12:21:55'),
+(25, 'Samsung Galaxy S21 Plus 5G (8GB|256GB)', 2, 'galaxy-s21-plus-black-didongviet_1_1.jpg', 'Samsung Galaxy S21 Plus 5G sở hữu thiết kế hiện đại, đón đầu xu thế mới với màn hình rộng 6.7 inch, cùng công nghệ màn hình Dynamic AMOLED 2X, 120Hz. Máy được trang bị hiệu năng cao cấp, hệ điều hành Android 11, One UI 3.1. Đồng thời camera 64MP cũng là điểm nhấn đặc biệt trên máy.\n\nSamsung Galaxy S21 Plus 5G là điện thoại chính hãng Samsung, nhận bảo hành 12 tháng theo chính sách ủy quyền của Samsung Việt Nam. Đặt mua Galaxy S21 Plus tại Di Động Việt với nhiều ưu đãi đi kèm hấp dẫn.', 28990000, 19390000, 2, 1, '2021-04-08 12:24:04'),
+(26, 'Samsung Galaxy S21 Ultra 5G (12GB|256GB)', 2, 'galaxy-s21-ultra-siver-didongviet_1_1.jpg', 'Samsung Galaxy S21 Ultra 5G sở hữu thiết kế sang trọng, đón đầu xu thế mới với màn hình rộng 6.8 inch, cùng công nghệ màn hình Dynamic AMOLED 2X, 120Hz. Máy được trang bị hiệu năng cao cấp, hệ điều hành Android 11, One UI 3.1. Đồng thời camera lên đến 108MP là điểm nổi bật trên phiên bản này.\n\nSamsung Galaxy S21 Ultra 5G là điện thoại chính hãng Samsung, nhận bảo hành 12 tháng theo chính sách ủy quyền của Samsung Việt Nam. Đặt mua Galaxy S21 Ultra 5G tại Di Động Việt với nhiều ưu đãi hấp dẫn.', 33990000, 23590000, 2, 1, '2021-04-08 12:26:39'),
+(27, 'Samsung Galaxy A32 (6GB|128GB)', 2, 'samsung-galaxy-a32_1.jpg', 'Samsung Galaxy A32 (6GB|128GB) có thiết kế mới lạ, trẻ trung. Màn hình giọt nước, camera 64 MP, được tích hợp cảm biến vân tay vào nút nguồn.\n\nGalaxy A32 (6GB|128GB) bán tại Di Động Việt là phiên bản chính hãng Samsung Việt Nam, mới 100% với tình trạng nguyên seal máy, nhận bảo hành 12 tháng và hưởng đầy đủ các ưu đãi theo chính sách ủy quyền của Samsung, đồng thời nhận nhiều ưu đãi, khuyến mãi hấp dẫn tại Di Động Việt.', 6690000, 5990000, 2, 1, '2021-04-08 12:28:18');
 
 -- --------------------------------------------------------
 
@@ -328,20 +309,8 @@ INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `product_thumb
 CREATE TABLE `product_bill` (
   `bill_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `quantity` int(11) NOT NULL DEFAULT '1'
+  `quantity` int(11) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Dumping data for table `product_bill`
---
-
-INSERT INTO `product_bill` (`bill_id`, `product_id`, `quantity`) VALUES
-(6, 1, 4),
-(6, 2, 2),
-(7, 1, 4),
-(7, 2, 2),
-(13, 1, 4),
-(13, 2, 2);
 
 -- --------------------------------------------------------
 
@@ -354,6 +323,34 @@ CREATE TABLE `product_image` (
   `product_id` int(11) NOT NULL,
   `image` varchar(100) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Dumping data for table `product_image`
+--
+
+INSERT INTO `product_image` (`product_image_id`, `product_id`, `image`) VALUES
+(4, 21, 'iphone-12-pro-128gb-vna_3.jpg'),
+(5, 21, 'iphone-12-pro-max-trang-bac-600x600-200x200.jpg'),
+(6, 21, 'iphone-12-pro-max-vang-new-600x600-200x200.jpg'),
+(7, 21, 'iphone-12-pro-max-xam-new-600x600-200x200.jpg'),
+(8, 22, 'iphone-12-pro-max-trang-bac-600x600-200x200.jpg'),
+(9, 22, 'iphone-12-pro-max-vang-new-600x600-200x200.jpg'),
+(10, 22, 'iphone-12-pro-max-xam-new-600x600-200x200.jpg'),
+(11, 22, 'iphone-12-pro-max-xanh-duong-new-600x600-600x600.jpg'),
+(12, 23, 'iphone-12-pro-max-trang-bac-600x600-200x200.jpg'),
+(13, 23, 'iphone-12-pro-max-vang-new-600x600-200x200.jpg'),
+(14, 23, 'iphone-12-pro-max-xam-new-600x600-200x200.jpg'),
+(15, 23, 'iphone-12-pro-max-xanh-duong-new-600x600-600x600.jpg'),
+(16, 24, 'iphone-12-pro-max-trang-bac-600x600-200x200.jpg'),
+(17, 24, 'iphone-12-pro-max-vang-new-600x600-200x200.jpg'),
+(18, 24, 'iphone-12-pro-max-xam-new-600x600-200x200.jpg'),
+(19, 24, 'iphone-12-pro-max-xanh-duong-new-600x600-600x600.jpg'),
+(20, 25, 's21-plus-5g_1_1_1.jpg'),
+(21, 25, 'samsung-galaxy-s21-plus-8gb-256gb.jpg'),
+(22, 26, 'samsung-galaxy-s21-ultra-12gb-256gb.jpg'),
+(23, 26, 'samsung-galaxy-s21-ultra-12gb-256gb_1.jpg'),
+(24, 27, 'samsung-galaxy-a32_1_1.jpg'),
+(25, 27, 'samsung-galaxy-a32-den-min.jpg');
 
 -- --------------------------------------------------------
 
@@ -539,7 +536,7 @@ ALTER TABLE `admins_account`
 -- AUTO_INCREMENT for table `bills`
 --
 ALTER TABLE `bills`
-  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `bill_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `brands`
@@ -551,13 +548,13 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `comment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `customers_account`
 --
 ALTER TABLE `customers_account`
-  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `permissions`
@@ -575,13 +572,13 @@ ALTER TABLE `permission_role`
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `product_image`
 --
 ALTER TABLE `product_image`
-  MODIFY `product_image_id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `product_image_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -675,3 +672,8 @@ ALTER TABLE `warranties`
   ADD CONSTRAINT `warranties_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `warranties_ibfk_3` FOREIGN KEY (`bill_id`) REFERENCES `bills` (`bill_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 SET FOREIGN_KEY_CHECKS=1;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
